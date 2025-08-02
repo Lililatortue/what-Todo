@@ -1,18 +1,18 @@
-mod config;
+pub mod config;
 
 
 use std::{collections::HashMap, path::PathBuf};
-use clap::{Parser, Subcommand};
 
+use crate::config::*;
 
 pub fn run(cli: Cli)->Result<(),&'static str> { 
-    match cli.command {
-        Command::Ls {long, path_priority, path}=> {
-            let config = config::Config::for_ls(long,path_priority,path);
+    match  cli.command {
+        Command::Ls(arg)=> {
+            let config = arg.build_config();
             create_all_todo(config)?; 
         },
-        Command::Open {var, editor} => {
-            let config = config::Config::for_open(var, editor);
+        Command::Open (arg) => {
+            let config = arg.build_config();
             open_in_editor(config)?;
         }, 
     }
@@ -74,32 +74,6 @@ fn open_in_editor(mut config: config::Config) -> Result<(), &'static str> {
     Ok(())
 }
 
-
-#[derive(Parser,Debug)]
-#[command(name = "todo")]
-pub struct Cli {
-    #[command(subcommand)]
-    command:Command,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum Command {
-    // list all todos
-    Ls  {
-        #[arg(short)]
-        long: bool, //full details
-        #[arg(short)]
-        path_priority: bool, //sorts base on path, defaults to variables
-        #[arg(default_value = ".")]
-        path: PathBuf,//can check recursively if path provided defaults to current
-    },
-    // open every file concerned with variable then opens it with editor
-    Open {
-        var: String,
-        editor: String,
-    },
-
-}
 
 
 

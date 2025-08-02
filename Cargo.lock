@@ -219,10 +219,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "project_builder"
-version = "0.1.0"
-
-[[package]]
 name = "project_navigator"
 version = "0.1.0"
 dependencies = [
