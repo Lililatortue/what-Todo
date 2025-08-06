@@ -1,4 +1,3 @@
-mod state;
 use std::{iter, str};
 
 pub struct TodoIterator<'a> {
@@ -18,7 +17,7 @@ impl<'a> Iterator for TodoIterator<'a> {
     }
 }
 
-
+/*
 impl<'a> TodoIterator<'a> {
     
     pub fn new(s:&'a str)-> Self {
@@ -49,4 +48,4 @@ impl<'a> TodoIterator<'a> {
         s.chars().zip(&mut i).all(|(i,a)| i==a) 
     }
 }
-
+*/

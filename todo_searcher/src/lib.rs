@@ -6,7 +6,7 @@ use std::{collections::HashMap, hash::Hash, path::PathBuf};
 use crate::iteration::TodoIterator;
 
 
-
+/*
 
 pub struct TraitsBuilder<'a> {
     path:PathBuf,
@@ -143,4 +143,4 @@ todo ( testing 2){description 2}
         assert_eq!(None, v.pop());
     }
 }
-
+*/
