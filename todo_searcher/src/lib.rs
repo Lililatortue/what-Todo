@@ -1,12 +1,11 @@
-mod parser;
+mod comment_parser;
+mod todo_parser;
 mod todo;
 mod iteration;
 
-use std::{collections::HashMap, hash::Hash, path::PathBuf};
-use crate::iteration::TodoIterator;
-
-
 /*
+
+
 
 pub struct TraitsBuilder<'a> {
     path:PathBuf,
