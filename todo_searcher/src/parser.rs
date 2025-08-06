@@ -1,90 +1,42 @@
 use std::{iter, str};
 use std::collections::VecDeque;
-/// This iterator as a state to track multi-line comments
-/// depending on its state it will right different Tokens
-/// 
-/// main goal seperate content from comment to text 
-/// because of this we can do:
-///
-/// // TODO (var) {
-/// pub fn thing(){}
-/// // }
-/// now the function can be in the description of TODO
-
-
-
-
 
 
 pub struct TextParser<'a>{
     state: State,
-    iter: iter::Peekable<str::Chars<'a>>
+    iter : iter::Peekable<str::CharIndices<'a>>,
 }
 
 impl<'a> TextParser<'a> {
-    pub fn new(iter: iter::Peekable<str::Chars<'a>>)->Self {
-        TextParser { 
-            state: State::Text(String::new()),
-            iter 
-        } 
+
+    pub fn new(s:&'a str)->Self{
+        TextParser{state: State::Text ,iter: s.char_indices().peekable()}
     }
-    
-   pub fn parse(&mut self)-> ParsedText {
-        let mut block: Block = VecDeque::new();
-        let mut parsed_text = ParsedText(VecDeque::new()); 
-        while let Some(c) = self.iter.next(){
-            let c2 =self.iter.peek();
-            match (c,c2){
-                ('/',Some('/')) | ('/', Some('*')) | ('*',Some('/'))=>{
-                    let c2 = self.iter.next();
+    pub fn parse(mut self) -> ParsedText {
+        let text: ParsedText;
+        while let Some((pos, ch)) = self.iter.next() {
+            let ch2 = self.iter.peek();
+            match(ch, ch2){
+                ('/',Some((_,'/')))=>{},
+                ('/',Some((_,'*')))=>{
 
-                    if let Some(t) = self.state.state_transition((c,c2)) {
-                        block.push_back(t);
-                    }  
+
                 },
-            
-                ('"',_) =>{
-                    if let Some(s) = self.state.state_transition((c,None)){
-                        block.push_back(s);
-                    }
+                ('"',_)=>{
+
+
+
                 },
+            }
 
-                ('\n',_)=>{
-                    if let Some(t) = self.state.state_transition((c,None)) {
-                        block.push_back(t);
-                    }
-                    let old = std::mem::take(&mut block); 
-                    parsed_text.queue(old);                           
-                },
-
-                _=> self.state.push_c(c),
-            };
         }
-        //
-        if let Some(s) = self.state.state_transition(('\n',None)){
-            block.push_back(s);
-        }
-        parsed_text.queue(block);
-        parsed_text
-    } 
-}
-
-#[derive(Debug, PartialEq)]
-pub enum BlockType {
-    Comment(String),
-    Code(String)
-}
-impl BlockType {
-    
-    pub fn as_str(&self) ->&str{
-        match self {
-            BlockType::Comment(s) |
-            BlockType::Code(s) => s
-        }
+        text
     }
+
 }
+
 enum State{
-    Text(String),
+    Text,
     Line(String),
     Block(String),
     String(String),
@@ -195,44 +147,6 @@ impl State {
     }
 }
 
-
-
-/// reads a file line and sequentially 
-/// push content of diffente types
-type Block = VecDeque<BlockType>;
-
-/// structs that seperates every lines into blocks
-/// Blocks can be either code or comments
-pub struct ParsedText(VecDeque<Block>);
-impl ParsedText {
-    pub fn dequeue(&mut self)->Option<Block>{
-        self.0.pop_front()
-    }
-    pub fn queue(&mut self, blocks:Block){
-       self.0.push_back(blocks); 
-    }
-    
-    pub fn into_iter(self)-> IntoIterParsedText{
-        IntoIterParsedText(self)
-    }
-}
-pub struct IntoIterParsedText(ParsedText);
-impl Iterator for ParsedText {
-    type Item = BlockType;
-    fn next(&mut self) ->Option<Self::Item> {  
-        loop {
-            match self.0.front_mut() {
-                Some(block) if block.is_empty() => {
-                    self.0.pop_front();
-                }
-                Some(block) => {
-                   return block.pop_front(); 
-                }
-                None => return None,
-            }
-        } 
-    }
-}
 
 
 

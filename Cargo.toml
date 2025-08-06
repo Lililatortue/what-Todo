@@ -2,6 +2,6 @@
 members = [
   "cli_interface",
   "todo_searcher",
-  "project_navigator", 
+  "project_navigator", "ast_parser", 
 ]
 
