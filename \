@@ -1,11 +1,9 @@
-mod parser;
+mod code_parser;
 mod todo;
 mod iteration;
 
 use std::{collections::HashMap, hash::Hash, path::PathBuf};
 use crate::iteration::TodoIterator;
-
-
 
 
 pub struct TraitsBuilder<'a> {
@@ -18,9 +16,10 @@ impl<'a> TraitsBuilder<'a> {
     }
     pub fn get_traits(self)-> DescBuilder<'a> {
         if let Some(str) = self.iter.take_while_strict(|c|c!=')') {
-            let iter = str.split_ascwhitespace();
+
         };
-                 
+              
+         
         DescBuilder {path: self.path, map, iter: self.iter}
     }
 }
