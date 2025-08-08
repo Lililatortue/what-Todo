@@ -1,145 +1,96 @@
 mod comment_parser;
 mod todo_parser;
 mod todo;
-mod iteration;
 
-/*
+pub mod todo_list {
+    use std::{fs,path::{PathBuf}};
 
 
-
-pub struct TraitsBuilder<'a> {
-    path:PathBuf,
-    iter: &'a mut TodoIterator<'a>,
-}
-impl<'a> TraitsBuilder<'a> {
-    pub fn new(path:PathBuf,iter:&'a mut TodoIterator<'a>)->Self {
-        TraitsBuilder { path, iter } 
+    use crate::{comment_parser, todo_parser, todo::Todo}; 
+    #[derive(Debug)]
+    pub struct FileTodo {
+        pub path: PathBuf,
+        pub list: Vec<crate::todo::Todo>,
     }
-    pub fn get_traits(self)-> DescBuilder<'a> {
-        if let Some(str) = self.iter.take_while_strict(|c|c!=')') {
-            let iter = str.split_ascwhitespace();
+
+    pub fn create_list(path: PathBuf) -> Result<FileTodo,&'static str> {  
+        let mut file_todo = FileTodo {path:path, list:Vec::new()};
+
+        let text = match fs::read_to_string(&file_todo.path){
+            Ok(text) => text,
+            Err(_) =>return Err("Error in files")
         };
-                 
-        DescBuilder {path: self.path, map, iter: self.iter}
-    }
-}
+         
+        let parsed_text = comment_parser::parse(&text);
+        let iter = match parsed_text.iter() {
+            Some(content) => content,
+            None => return Err("no comments in this file skipping"),
+        };
 
-pub struct DescBuilder<'a> {
-    path:PathBuf,
-    map: HashMap<String,String>, 
-    iter: &'a mut TodoIterator<'a>,
-}
-impl<'a> DescBuilder<'a> {
-    pub fn get_desc() ->Todo{
+        let mut builder = todo_parser::TodoStrBuilder(iter);
         
+        loop {
+            if !builder.find_todo(){
+                break;
+            }
+            let var_str  = match builder.get_var(){
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let desc_str = match builder.get_desc() {
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let todo = Todo::new(var_str,desc_str);
+
+            file_todo.list.push(todo)
+        }
+        Ok(file_todo) 
     }
-}
+   
 
 
+    pub fn create_filtered_list_lazy<P>(
+        path:PathBuf,mut predicate: P )->Result<FileTodo,&'static str>
+    where 
+        P: FnMut(&mut Todo)->bool
+    {
+        let mut file_todo = FileTodo {path:path, list:Vec::new()};
 
+        let text = match fs::read_to_string(&file_todo.path){
+            Ok(text) => text,
+            Err(_) =>return Err("Error in files")
+        };
+         
+        let parsed_text = comment_parser::parse(&text);
+        let iter = match parsed_text.iter() {
+            Some(content) => content,
+            None => return Err("no comments in this file skipping"),
+        };
 
-impl<'a> TodoBuilder<'a> {
-
-    pub fn new(s:&'a str)-> Self {
-       TodoBuilder{ iter: TodoIterator::new(s)}
-    }
-
-    pub fn find_next_todo(&mut self)->bool {
-        let mut found = false; 
-
-        while let Some(c) = self.iter.next(){
-            match c {
-                't'|'T' => { let word = std::iter::once(c)
-                                    .chain(
-                                        self.iter.by_ref()
-                                        .take_while(|c| *c != ' ' && *c != '\n')
-                                    ).collect::<String>();
-                        if word.trim().eq_ignore_ascii_case("todo") {
-                            found = true;
-                            break;
-                        } else {continue}
-                },
-                _      => continue,
+        let mut builder = todo_parser::TodoStrBuilder(iter);
+    
+        loop {
+            if !builder.find_todo(){
+                break;
+            }
+            let var_str  = match builder.get_var(){
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let desc_str = match builder.get_desc() {
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let mut todo = Todo::new(var_str,desc_str);
+            match predicate(&mut todo) {
+                true => file_todo.list.push(todo),
+                false=>(),
             }
         }
-        found
-    }
-
-    pub fn get_var(&mut self)-> Result<String,()> {
-        let mut var = None;
-        while let Some(s) = self.iter.next() {
-            match s { 
-                '('       =>{var = self.iter.take_while_strict(|c| c != ')')
-                                       .map(|s| s.trim().to_string());
-                             break;
-                            },
-                ' '|'\n'  => continue,
-                 _        => break,
-            } 
-        }
-        match var {
-            Some(v) => Ok(v),
-            None   => Err(())
-        }
-
-    }
-    pub fn get_desc(&mut self)-> Result<String,()> {
-        let mut desc = None;    
-        while let Some(s) = self.iter.next() {
-            match s { 
-                '{'       =>{desc= self.iter.take_while_strict(|c| c != '}')
-                                       .map(|s| s.trim().to_string());
-                             break;
-                            },
-                ' '|'\n'  => continue,
-                 _        => break,
-            } 
-        }
-        match desc {
-            Some(d) => Ok(d),
-            None   => Err(())
-        }
-    } 
-}    
-
-#[cfg(test)]
-mod test {
-
-    use super::*;
-    
-    #[test]
-    pub fn test_build() {//this gets triggered after search function find string 
-        let mut v = Vec::<(String, String)>::new();                      //word.to_lowercase == todo
-        let content = "\
-todo (testing 1){description 1 }
-todo (testing 3) {
-todo ( testing 2){description 2}
-
-//";
-        let mut builder = TodoBuilder::new(&content); 
-        while builder.find_next_todo() {
-            let var = match builder.get_var() {
-                Ok(v)  => v,
-                Err(_) => {log::warn!("Error: unclosed parenthesis on line: "); continue;} 
-            };
-
-            let desc = match builder.get_desc() {
-                Ok(d) => d,
-                Err(_)=> {log::warn!("Error: unclosed curly braces on line: "); continue;}
-            };
-            
-            v.push((var,desc))
-        }
-        
-        let todo = v.pop().unwrap();
-        assert_eq!("testing 2",todo.0); 
-        assert_eq!("description 2",todo.1); 
-
-        let todo = v.pop().unwrap();
-        assert_eq!("testing 1", todo.0); 
-        assert_eq!("description 1", todo.1); 
-
-        assert_eq!(None, v.pop());
+        Ok(file_todo) 
     }
 }
-*/
+
+
+

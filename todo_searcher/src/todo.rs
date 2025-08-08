@@ -1,21 +1,19 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap};
 
 
-// general Idea:
-// ex: (UI priorite=2  train) ==
-// taits {(UI,true) , (priorite, 2), (train, true)}
-//
-//
-
+/// Parses the &str and creates todos
+/// this section copies to allow to freely use the
+#[derive(Debug)]
 pub struct Todo {
-    path:PathBuf,
-    traits: HashMap<String,String>,
-    desc: String,
+    pub traits: HashMap<String,String>,
+    pub desc: String,
 }
 
 impl Todo {
-    pub fn new(path:PathBuf, traits: String, desc: String)->Self{
-        Todo { path, traits:Todo::parse_traits(traits), desc }
+    pub fn new(traits: &str, desc: &str)->Self {
+        let traits = traits.to_string();
+        let desc   = desc.to_string();
+        Todo { traits:Todo::parse_traits(traits), desc: desc }
     }
 
     fn parse_traits(traits:String)-> HashMap<String,String> {
@@ -32,7 +30,26 @@ impl Todo {
             }
         }
         map
-    } 
+    }
+
+    pub fn filter<P>(&mut self,mut predicate:P)->Option<Todo>
+        where 
+            P: FnMut(&mut Self)->Option<Todo>
+    {
+       predicate(self) 
+    }
 }
 
 
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    pub fn build_todo() {
+        let text ="todo (UI PARSER=1) {build an UI for the parser}";
+
+        let todo = Todo::new(&text[6..17],&text[20..46]); 
+    }
+
+}

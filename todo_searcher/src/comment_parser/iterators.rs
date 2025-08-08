@@ -35,25 +35,77 @@ impl<'a> Iterator for IntoIterCommentsQueue<'a> {
         self.0.dequeue() 
     }
 }
-
+#[allow(dead_code)]
+type BufferQueue = VecDeque<(usize,char)>;
 
 pub struct IterCommentsQueueStr<'a>{
+    buffer : BufferQueue,
     current: IterCommentStr<'a>,
     queue  : vec_deque::Iter<'a, Comments<'a>>
 }
 
 impl<'a> IterCommentsQueueStr<'a> {
+    
+
     pub fn new(vec: &'a VecDeque<Comments<'a>>) -> Option<Self> {
         let mut iter = vec.iter();
         let comment = iter.next()?;
-        Some(IterCommentsQueueStr { current:comment.iter(), queue: iter })
+
+        Some(IterCommentsQueueStr {
+            buffer: VecDeque::new(),
+            current:comment.iter(),
+            queue: iter 
+            }
+        )
+    
+    }
+    //calls next and puts the var in a buffer 
+    // meant to be use to for pattern matching
+    pub fn look_forward(&mut self)->Option<(usize, char)>{
+        let ch = self.next()?; 
+        self.buffer.push_back(ch);
+        print!("{} ",&ch.1);
+        Some(ch)
+    }
+
+    
+    pub fn buffered_next(&mut self)->Option<(usize, char)>{
+        if self.buffer.is_empty() {
+            let ch = self.next()?;
+            print!("{} ",&ch.1);
+            return Some(ch);
+        }   
+            let ch = self.buffer.pop_front();
+            return ch;
+
+    }
+    pub fn put_back_buffer(&mut self,c:(usize,char)) {
+        self.buffer.push_back(c);
+    }
+
+    pub fn clear_buffer(&mut self) {
+        self.buffer.clear();
+    }
+
+    ///returns true when pattern match
+    ///else it returns false DOES NOT CLEAR THE BUFFER
+    pub fn check_pattern<F>(&mut self,mut op: F,pattern: Vec<char>)->bool
+    where 
+        F: FnMut(&mut Self)->Option<(usize,char)>
+    {
+        let iter = std::iter::from_fn(|| op(self));
+        
+        if pattern.iter().zip(iter).all(|(p, i)|*p==i.1.to_ascii_lowercase()) {
+            return true;
+        }
+        false
     }
 }
 //returns absolute position
 impl<'a> Iterator for IterCommentsQueueStr<'a> {
     type Item = (usize, char);
 
-    fn next(&mut self)->Option<Self::Item> {
+    fn next(&mut self)->Option<Self::Item> { 
         loop {
             if let Some(c) = self.current.next() {
                 return Some(c);
@@ -61,7 +113,6 @@ impl<'a> Iterator for IterCommentsQueueStr<'a> {
                 match self.queue.next() {
                     Some(comment) =>{
                         self.current = comment.iter();
-
                     },
                     None => return None,
                 }
@@ -69,6 +120,8 @@ impl<'a> Iterator for IterCommentsQueueStr<'a> {
 
         }
     }
+
+
 }
 
 

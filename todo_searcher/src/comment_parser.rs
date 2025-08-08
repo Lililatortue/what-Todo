@@ -4,8 +4,8 @@ use std::{collections::{VecDeque}, str};
 use crate::comment_parser::iterators::*;
 
 
+#[derive(Debug)]
 pub struct CommentsQueue<'a>(VecDeque<Comments<'a>>);
-
 impl<'a> CommentsQueue<'a> {
     pub fn new()-> Self {
         CommentsQueue(VecDeque::new())
@@ -18,7 +18,7 @@ impl<'a> CommentsQueue<'a> {
     pub fn queue(&mut self,comment:Comments<'a>) {
        self.0.push_back(comment); 
     }
-
+    #[allow(dead_code)]
     pub fn as_ref(&self)->&VecDeque<Comments<'a>> {
        &self.0 
     }
@@ -43,11 +43,6 @@ impl<'a> Comments<'a> {
         self.str
     }
 
-    pub fn as_absolute_position(&self, i:usize)->usize {
-        self.range.0 + i 
-    }
-
-
     pub fn iter(&self) -> IterCommentStr {
         IterCommentStr {range: self.range, iter: self.as_str().char_indices()}
     }
@@ -55,7 +50,6 @@ impl<'a> Comments<'a> {
 
 
 
-    
 pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
     let mut parsed_text = CommentsQueue::new();
     let mut iter = text.char_indices().peekable();
@@ -64,25 +58,36 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
     while let Some((_, ch)) = iter.next() {
         let ch2 = iter.by_ref().peek();
         match(ch, ch2){
-            ('/',Some(&(start_pos,'/')))=>{
-                let start = start_pos+1;
-                let mut end = start_pos;
-                for _ in iter.by_ref().take_while(|(_,c)| *c!='\n') {
-                    end += 1;
+            ('/',Some(&(_,'/')))=>{
+                let Some((start,_)) = iter.next() else { break };
+
+                let mut end = start;
+                while let Some((pos,ch)) = iter.next() {
+                    if ch =='\n'{
+                        break;
+                    }
+                     end = pos + ch.len_utf8();  
                 }
+                println!(" ");
+                println!("parsed comment = {}",&text[start+1..end]);
                 let com = Comments {
-                    range: (start,end),
-                    str:&text[start..end]
+                    range: (start+1,end),
+                    str:&text[start+1..end]
                 };
                 parsed_text.queue(com);
             },
-            ('/',Some(&(start_pos,'*')))=>{
-                let start = start_pos + 1;
+            ('/',Some(&(_,'*')))=>{
+                let Some((start,_)) = iter.next() else { break };
+
                 let mut end = start;
                 loop {
-                    for _ in iter.by_ref().take_while(|(_,c)|*c!='*') {
-                        end += 1; 
+                    for (pos,ch) in iter.by_ref().take_while(|(_,c)|*c!='*') {
+                        print!("{} ",&ch);
+                        end = pos + ch.len_utf8(); 
                     };
+                    println!(" ");
+                    println!("parsed comment = {}",&text[start+1..end]);
+
                     match iter.peek() {
                         Some((_,'/'))=>break,
                         None => break,
@@ -90,8 +95,8 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
                     }
                 }                
                 let com = Comments {
-                    range: (start,end),
-                    str:&text[start..end]
+                    range: (start+1,end),
+                    str:&text[start+1..end]
                 };
                 parsed_text.queue(com);
             },
@@ -100,7 +105,15 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
     }
         parsed_text
 }
- 
+
+
+
+
+
+
+
+
+
 
 #[cfg(test)]
 mod test {
