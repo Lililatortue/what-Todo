@@ -98,7 +98,7 @@ mod test {
     #[test]
     pub fn todo_parser() {
 let text = r#"
-// TODO(parser UI dumbstuff=3) {implement parser}
+// TODO(UI) {implement parser}
 let x = 5;
 // This one should also match: TODO(helper) {clean up logic}
 /* TODO(math) {optimize equation} */
@@ -111,7 +111,7 @@ let x = 5;
 /* random block with TODO but no structure */
 // tOdO(typo) {ok} — valid if case-insensitive and structure ok
 // TODO  (   spaced   )   {  spaced out description  }
-// Todo (UI change name) { please change the name of this function:
+// Todo (UI) { please change the name of this function:
     pub fn CHANGE_MY_NAME(x:i32, y:i32)->i32{
         x+y
     }  

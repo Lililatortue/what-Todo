@@ -1,12 +1,13 @@
-// ✅ Valid formats
+/* Valid formats
 todo (cleanup) {Remove unused imports}
 todo (optimize) {Refactor loop to iterator}
 todo (UI) {Fix alignment issue on mobile}
 
-// ❌ Invalid formats
+Invalid formats
 todo cleanup {missing parentheses}
 todo (bug) missing braces
 todo (forgot_close {unclosed parens
 todo (spacing) {  Valid with extra spacing  }
 todo optimize) {mismatched parens}
 not a todo line
+*/
