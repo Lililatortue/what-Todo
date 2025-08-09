@@ -6,6 +6,59 @@ pub mod todo_list {
     use std::{collections::HashMap};
 
 
+    /// creates a list of all todo of FileTodo
+    pub fn create_list(path: PathBuf) -> Result<FileTodo,String> {  
+        let mut file_todo = FileTodo {path:path, list:Vec::new()};
+
+        let text = match fs::read_to_string(&file_todo.path){
+            Ok(text) => text,
+            Err(_) =>return Err(format!("Error in files {}",&file_todo.path.display()))
+        };
+         
+        let parsed_text = comment_parser::parse(&text);
+        let iter = match parsed_text.iter() {
+            Some(content) => content,
+            None => return Err(format!("no comments in this file skipping {}",&file_todo.path.display())),
+        };
+
+        let mut builder = todo_parser::TodoStrBuilder(iter);
+        
+        loop {
+            if !builder.find_todo(){
+                break;
+            }
+            let var_str  = match builder.get_var(){
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let desc_str = match builder.get_desc() {
+                Some(val)=>&text[val.0..val.1],
+                None =>{  continue;}//find next
+            };
+            let todo = Todo::new(var_str,desc_str);
+
+            file_todo.list.push(todo)
+        }
+        Ok(file_todo) 
+    }
+
+
+    use crate::{comment_parser, todo_parser }; 
+    #[derive(Debug)]
+    pub struct FileTodo {
+        pub path: PathBuf,
+        pub list: Vec<Todo>,
+    }
+
+    impl FileTodo {
+        pub fn filter_content<P>(&mut self, mut predicate: P)
+            where P: FnMut(&Todo)-> bool  
+        {
+            self.list.retain(|todo| predicate(todo))
+        }
+    }
+
+
     /// Parses the &str and creates todos
     /// this section copies to allow to freely use the
     #[derive(Debug)]
@@ -17,7 +70,7 @@ pub mod todo_list {
     impl Todo {
         pub fn new(traits: &str, desc: &str)->Self {
             let traits = traits.to_string();
-            let desc   = desc.to_string();
+            let desc   = desc.trim().to_string();
             Todo { traits:Todo::parse_traits(traits), desc: desc }
         }
 
@@ -45,90 +98,6 @@ pub mod todo_list {
         }
     }
 
-    use crate::{comment_parser, todo_parser }; 
-    #[derive(Debug)]
-    pub struct FileTodo {
-        pub path: PathBuf,
-        pub list: Vec<Todo>,
-    }
-
-    pub fn create_list(path: PathBuf) -> Result<FileTodo,&'static str> {  
-        let mut file_todo = FileTodo {path:path, list:Vec::new()};
-
-        let text = match fs::read_to_string(&file_todo.path){
-            Ok(text) => text,
-            Err(_) =>return Err("Error in files")
-        };
-         
-        let parsed_text = comment_parser::parse(&text);
-        let iter = match parsed_text.iter() {
-            Some(content) => content,
-            None => return Err("no comments in this file skipping"),
-        };
-
-        let mut builder = todo_parser::TodoStrBuilder(iter);
-        
-        loop {
-            if !builder.find_todo(){
-                break;
-            }
-            let var_str  = match builder.get_var(){
-                Some(val)=>&text[val.0..val.1],
-                None =>{  continue;}//find next
-            };
-            let desc_str = match builder.get_desc() {
-                Some(val)=>&text[val.0..val.1],
-                None =>{  continue;}//find next
-            };
-            let todo = Todo::new(var_str,desc_str);
-
-            file_todo.list.push(todo)
-        }
-        Ok(file_todo) 
-    }
-   
-
-
-    pub fn create_filtered_list_lazy<P>(
-        path:PathBuf,mut predicate: P )->Result<FileTodo,&'static str>
-    where 
-        P: FnMut(&mut Todo)->bool
-    {
-        let mut file_todo = FileTodo {path:path, list:Vec::new()};
-
-        let text = match fs::read_to_string(&file_todo.path){
-            Ok(text) => text,
-            Err(_) =>return Err("Error in files")
-        };
-         
-        let parsed_text = comment_parser::parse(&text);
-        let iter = match parsed_text.iter() {
-            Some(content) => content,
-            None => return Err("no comments in this file skipping"),
-        };
-
-        let mut builder = todo_parser::TodoStrBuilder(iter);
-    
-        loop {
-            if !builder.find_todo(){
-                break;
-            }
-            let var_str  = match builder.get_var(){
-                Some(val)=>&text[val.0..val.1],
-                None =>{  continue;}//find next
-            };
-            let desc_str = match builder.get_desc() {
-                Some(val)=>&text[val.0..val.1],
-                None =>{  continue;}//find next
-            };
-            let mut todo = Todo::new(var_str,desc_str);
-            match predicate(&mut todo) {
-                true => file_todo.list.push(todo),
-                false=>(),
-            }
-        }
-        Ok(file_todo) 
-    }
 }
 
 

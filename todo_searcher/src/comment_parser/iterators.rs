@@ -64,7 +64,6 @@ impl<'a> IterCommentsQueueStr<'a> {
     pub fn look_forward(&mut self)->Option<(usize, char)>{
         let ch = self.next()?; 
         self.buffer.push_back(ch);
-        print!("{} ",&ch.1);
         Some(ch)
     }
 
@@ -72,15 +71,14 @@ impl<'a> IterCommentsQueueStr<'a> {
     pub fn buffered_next(&mut self)->Option<(usize, char)>{
         if self.buffer.is_empty() {
             let ch = self.next()?;
-            print!("{} ",&ch.1);
             return Some(ch);
         }   
             let ch = self.buffer.pop_front();
             return ch;
 
     }
-    pub fn put_back_buffer(&mut self,c:(usize,char)) {
-        self.buffer.push_back(c);
+    pub fn put_front_buffer(&mut self,c:(usize,char)) {
+        self.buffer.push_front(c);
     }
 
     pub fn clear_buffer(&mut self) {

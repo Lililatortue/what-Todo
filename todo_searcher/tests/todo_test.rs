@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use todo_searcher::todo_list::{self};
 
-//Todo (Test_1) {check this comment
+//Todo (comment) {check this comment
 #[test]
 fn parse_comment(){
   let file = todo_list::create_list(PathBuf::from("tests/todo_test.rs"));

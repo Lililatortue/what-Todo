@@ -8,7 +8,7 @@ pub struct Config {
     pub detail: bool,
     pub path_priority: bool,
     pub var : Option<String>,
-    pub path: PathBuf,
+    pub path: Option<PathBuf>,
 }
 
 
@@ -34,8 +34,10 @@ pub struct LsArgs {
         long: bool, //full details
         #[arg(short)]
         path_priority: bool, //sorts base on path, defaults to variables
-        #[arg(default_value = ".")]
-        path: PathBuf,//can check recursively if path provided defaults to current
+        #[arg(long,default_value = None)]
+        path: Option<PathBuf>,//can check recursively if path provided defaults to current
+        #[arg(short)]
+        var: Option<String>
 }
 use crate::config;
 
@@ -46,25 +48,11 @@ impl LsArgs {
     /// since its binary nature dir makes the bool in config 
     /// be true and a file make it false the rest terminates the program
     pub fn build_config(self) -> config::Config {
-        let (path, _is_dir); // for now no use for if dir or not, in futur will dictate strategy on
-                             // how to parse
-        if self.path.is_dir() {
-            (path,_is_dir) = (self.path, true); 
-        } else if self.path.is_file(){
-            (path,_is_dir) = (self.path, false);
-        } else {
-            eprintln!(
-                "Error: {} is a non supported file type selected. \
-                Please make sure the path choosen is a file or a directory", 
-                self.path.display()
-            );
-            std::process::exit(1);
-        }
         config::Config {
             detail: self.long,
             path_priority: self.path_priority,
-            path  : path,
-            var: None,
+            path  : self.path,
+            var: self.var,
         }
     }
 }
@@ -99,7 +87,7 @@ impl OpenArgs {
         config::Config {
             detail: false,
             path_priority: false,
-            path: path,
+            path: Some(path),
             var : Some(var),
         }
     }
@@ -109,12 +97,11 @@ mod test {
     use super::*;
     #[test]
     pub fn test_ls_args(){
-       let arg = LsArgs {long: false, path_priority: false, path: PathBuf::from("./src/lib.rs")};
+       let arg = LsArgs {long: false, path_priority: false, path: Some(PathBuf::from("./src/lib.rs"))};
        let config = arg.build_config();
 
        assert_eq!(false, config.detail);
        assert_eq!(false,config.path_priority);
-       assert_eq!(PathBuf::from("./src/lib.rs"),config.path);
        assert_eq!(None, config.var);
     }
 
@@ -125,7 +112,6 @@ mod test {
 
        assert_eq!(false, config.detail);
        assert_eq!(false,config.path_priority);
-       assert_eq!(PathBuf::from("/home/lililatortue/Dev/Rust/projects/What-Todo/cli_interface"),config.path);
        assert_eq!(Some("apple"), config.var.as_deref());
     }
 

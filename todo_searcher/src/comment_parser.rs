@@ -68,8 +68,6 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
                     }
                      end = pos + ch.len_utf8();  
                 }
-                println!(" ");
-                println!("parsed comment = {}",&text[start+1..end]);
                 let com = Comments {
                     range: (start+1,end),
                     str:&text[start+1..end]
@@ -82,11 +80,8 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
                 let mut end = start;
                 loop {
                     for (pos,ch) in iter.by_ref().take_while(|(_,c)|*c!='*') {
-                        print!("{} ",&ch);
                         end = pos + ch.len_utf8(); 
                     };
-                    println!(" ");
-                    println!("parsed comment = {}",&text[start+1..end]);
 
                     match iter.peek() {
                         Some((_,'/'))=>break,

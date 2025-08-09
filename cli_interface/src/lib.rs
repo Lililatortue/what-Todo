@@ -1,48 +1,29 @@
 pub mod config;
-
-
-use std::{collections::HashMap, path::PathBuf};
+mod ls;
+//mod open; 
 
 use crate::config::*;
 
 pub fn run(cli: Cli)->Result<(),&'static str> { 
-    match  cli.command {
+     let _ =match  cli.command {
         Command::Ls(arg)=> {
             let config = arg.build_config();
-            create_all_todo(config)?; 
+            match ls::list_todo(config) {
+                Ok(_)  =>Ok(()),
+                Err(e) => Err(e)
+            }
         },
-        Command::Open (arg) => {
-            let config = arg.build_config();
-            open_in_editor(config)?;
+        //not supported yet working on it
+        Command::Open (_arg) => { Ok(())
+            //let config = arg.build_config();
+            //open_in_editor(config)?;
         }, 
-    }
+    };
     Ok(())
 }
 
 
-// super unoptimal but idc for now 
-// will improve through the next month as i get better
-fn create_all_todo(config: config::Config) -> Result<(), &'static str> {
-    let mut file_list = project_navigator::search_fs(config.path);
-
-    let mut map:HashMap<String, Vec<(PathBuf,String)>> = HashMap::new(); 
-    //go through every file
-    while let Some(p) = file_list.pop() {
-        //parse every todo in file
-        let mut v = project_navigator::search_file(&p);
-        //put it in a hashmap
-        while let Some((var, desc)) = v.pop() {
-            map.entry(var).or_default().push((p.to_path_buf(), desc));
-        }
-    }
-    for (key, vector) in map {
-        println!("\n{key}:");
-        for (path, desc) in vector {
-            println!("\t{}, {desc}",path.to_string_lossy().to_string());
-        }
-    }
-    Ok(()) 
-}
+/*
 fn open_in_editor(mut config: config::Config) -> Result<(), &'static str> {
     let mut file_list = project_navigator::search_fs(config.path);
     
@@ -72,7 +53,7 @@ fn open_in_editor(mut config: config::Config) -> Result<(), &'static str> {
         .expect("failed process back to the drawing board");
 
     Ok(())
-}
+}*/
 
 
 

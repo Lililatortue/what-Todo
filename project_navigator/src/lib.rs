@@ -1,8 +1,9 @@
 use std::{path::PathBuf};
 
+use ignore::WalkBuilder;
 use walkdir::{WalkDir};
 use rayon::prelude::*;
-use todo_searcher::todo_list::FileTodo;
+use todo_searcher::todo_list::{FileTodo, create_list};
 /* 
  * searching all todos and listing them -> either by path or by var
  * 
@@ -21,49 +22,50 @@ fn is_binary_ext(path:& PathBuf)-> bool {
 }
 
 pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
-    let files = WalkDir::new(path)
-         .into_iter()
-         .filter_entry(|e| {!e.file_name()
-                             .to_str()
-                             .map(is_hidden)
-                             .unwrap_or(false)
-         })
-           .filter_map(Result::ok)
-           .filter(|e| e.file_type().is_file())
-           .map(|e| e.path().to_path_buf())
-           .filter(|path| !is_binary_ext(path))
-           .collect(); 
-    files
+    let walk = WalkBuilder::new(path)
+        .hidden(true)       
+        .ignore(true)               
+        .git_ignore(true)           
+        .git_exclude(true)          
+        .git_global(true)           
+        .follow_links(false)
+        .build();
+
+        walk.filter_map(Result::ok)                                  
+        .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
+        .map(|e| e.into_path())
+        .filter(|p| !is_binary_ext(p))                          
+        .collect()
 }
 
-pub fn find_dir(path:PathBuf)->Option<PathBuf>{
+pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
     let root = std::fs::canonicalize(".").unwrap();
     for directory in WalkDir::new(root)
                     .into_iter()
                     .filter_map(Result::ok)
-                    .filter(|f| f.file_type().is_dir())
     {
         if directory.file_name() == path {
-            return Some(directory.into_path())
+            return Ok(directory.into_path())
         }
     }
-    None
+    Err("Error: non-existant path {}")
 }
 
 
 pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
     let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
         let path = file.to_path_buf();
-        let todos = todo_searcher::todo_list::create_list(path.clone());
+        let todos = create_list(path.clone());
         match todos {
             Ok(todo) =>Some(todo),
-            Err(e)  =>{ eprintln!("{}",e); 
-                        None}
-            ,
+            Err(e)  =>{ log::warn!("{}",e); 
+                        None},
         }
     }).collect();
     parsed_files 
 }
+
+
 
 
 #[cfg(test)]
@@ -82,11 +84,11 @@ mod test {
 
     #[test]
     pub fn test_navigation_path(){
-        let directory = find_dir(PathBuf::from("project_navigator"));
+        let directory = find_fs_location(PathBuf::from("project_navigator"));
         let directory = match directory {
-            Some(dir) => dir,
-            None      => {
-                eprintln!("Error: no directory found");
+            Ok(dir) => dir,
+            Err(e)      => {
+                eprintln!("{}",e);
                 std::process::exit(1)
             },
         };

@@ -15,7 +15,7 @@ impl<'a> TodoStrBuilder<'a> {
     pub fn find_todo(&mut self)->bool {
         while let Some(ch) = self.0.buffered_next(){
             match ch.1 {
-                't' | 'T' =>{ 
+                't' | 'T' =>{
                     //does consume buffer
                     if self.0.check_pattern(|iter|iter.buffered_next(), PATTERN.to_vec()) {
                         self.0.clear_buffer();
@@ -37,12 +37,11 @@ impl<'a> TodoStrBuilder<'a> {
                     while let Some(end) = self.0.buffered_next() {
                         match end.1 {
                             't' | 'T' =>{
-                                self.0.put_back_buffer(end);
                                 //consumes buffer
                                 if self.0.check_pattern(|iter|iter.look_forward(),PATTERN.to_vec()){ 
+                                    self.0.put_front_buffer(end);
                                     return None;
                                 }
-                                self.0.clear_buffer(); 
                             },
                             ')' =>{return Some((start.0+1,end.0))},
                              _  => continue,
@@ -53,7 +52,7 @@ impl<'a> TodoStrBuilder<'a> {
 
                 |'\t'|' '|'\n' => continue,
 
-                _ => {println!("breaking");break},   
+                _ => break,   
             }
         }  
         None
@@ -67,12 +66,11 @@ impl<'a> TodoStrBuilder<'a> {
                     while let Some(end) = self.0.buffered_next() {
                         match end.1 {
                             't' | 'T' =>{
-                                self.0.put_back_buffer(end);
                                 //consumes the buffer 
-                                if self.0.check_pattern(|iter|iter.buffered_next(),PATTERN.to_vec()){
+                                if self.0.check_pattern(|iter|iter.look_forward(),PATTERN.to_vec()){
+                                    self.0.put_front_buffer(end);
                                     return None
                                 }
-                                self.0.clear_buffer();
                             },
                             '}' => return Some((start.0+1,end.0)),
                              _  => continue,
