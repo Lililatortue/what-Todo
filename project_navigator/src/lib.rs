@@ -1,127 +1,99 @@
-use std::{ fs::{self, read_to_string}, io, path::PathBuf};
+use std::{path::PathBuf};
 
+use walkdir::{WalkDir};
+use rayon::prelude::*;
+use todo_searcher::todo_list::FileTodo;
 /* 
  * searching all todos and listing them -> either by path or by var
  * 
  * opening all files concerned with todo
  *
  * */
-use todo_searcher::TodoBuilder;
-
-
-
-pub fn search_fs(path:PathBuf)->Vec<PathBuf> {
-    let Ok((mut file_list,mut dir_list)) = search_dir(path) 
-        else { 
-            panic!("error in file system");
-        };
-        
-    while let Some(list) = dir_list.pop() {
-        let Ok((mut dir_file_list,mut dir_dir_list)) = search_dir(list) 
-            else {
-                panic!("error in file system");
-            };
-        file_list.append(&mut dir_file_list);
-        dir_list .append(&mut dir_dir_list);
-    }
-    file_list
+fn is_hidden(name: &str)-> bool {
+    name.starts_with('.')
 }
 
-pub fn search_dir(path:PathBuf)-> Result<(Vec<PathBuf>, Vec<PathBuf>), io::Error> {   
-    let mut file_list:Vec<PathBuf> = Vec::new();
-    let mut dir_list:Vec<PathBuf>  = Vec::new();
+fn is_binary_ext(path:& PathBuf)-> bool {
+    matches!(path.extension().and_then(|ext| ext.to_str()),
+              Some("exe" | "dll" | "so" | "bin" | "class" | "o" | "a"
+            | "jpg" | "jpeg" | "png" | "gif" | "pdf" | "zip" | "tar" | "gz")   
+            )
+}
 
-    let entries = fs::read_dir(&path)?; 
-    for entry in entries {
-        let entry = entry?;
-        let metadata = entry.metadata()?;
-         
-        if entry.file_name()
-                .to_str()
-                .map(|s| s.starts_with('.'))
-                .unwrap_or(false) {
-            continue;
-        };
+pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
+    let files = WalkDir::new(path)
+         .into_iter()
+         .filter_entry(|e| {!e.file_name()
+                             .to_str()
+                             .map(is_hidden)
+                             .unwrap_or(false)
+         })
+           .filter_map(Result::ok)
+           .filter(|e| e.file_type().is_file())
+           .map(|e| e.path().to_path_buf())
+           .filter(|path| !is_binary_ext(path))
+           .collect(); 
+    files
+}
 
-        match metadata.is_file() {
-            true =>file_list.push(entry.path()),
-            false=>dir_list.push(entry.path()),
+pub fn find_dir(path:PathBuf)->Option<PathBuf>{
+    let root = std::fs::canonicalize(".").unwrap();
+    for directory in WalkDir::new(root)
+                    .into_iter()
+                    .filter_map(Result::ok)
+                    .filter(|f| f.file_type().is_dir())
+    {
+        if directory.file_name() == path {
+            return Some(directory.into_path())
         }
-
-
     }
-    Ok((file_list, dir_list))
+    None
 }
 
 
+pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
+    let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
+        let path = file.to_path_buf();
+        let todos = todo_searcher::todo_list::create_list(path.clone());
+        match todos {
+            Ok(todo) =>Some(todo),
+            Err(e)  =>{ eprintln!("{}",e); 
+                        None}
+            ,
+        }
+    }).collect();
+    parsed_files 
+}
 
-pub fn search_file(path:&PathBuf) -> Vec<(String,String)> {
-    let mut v = Vec::<(String,String)>::new();
-
-    let content = match read_to_string(path){
-        Ok(content) => content,
-        Err(_) =>{ log::info!("Skipped unreadable file: {:?}", path); return vec![];}
-    };
-    let mut builder =  TodoBuilder::new(&content);    
-        
-    while builder.find_next_todo() {
-        let var = match builder.get_var() {
-            Ok(v)  => v,
-            Err(_) => {log::warn!("Error: unclosed parenthesis \n file: \ton line: "); continue;} 
-        };
-
-        let desc = match builder.get_desc() {
-            Ok(d) => d,
-            Err(_)=> {log::warn!("Error: unclosed curly braces\n file: \ton line: "); continue;}
-        };   
-        v.push((var,desc)) 
-    }
-    v
-}   
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
+    use super::*; 
     #[test]
-    pub fn test_search_file(){
-        let mut v = search_file(&PathBuf::from("folder_test/test1.txt"));
-        
-        let mut result = vec![
-        ("cleanup".to_string(), "Remove unused imports".to_string()),
-        ("optimize".to_string(), "Refactor loop to iterator".to_string()),
-        ("UI".to_string(), "Fix alignment issue on mobile".to_string()),
-        ("spacing".to_string(), "Valid with extra spacing".to_string()),
-                        ];
-        
-        assert_eq!(result.pop(), v.pop());
-        assert_eq!(result.pop(), v.pop());
-        assert_eq!(result.pop(), v.pop());
-        assert_eq!(result.pop(), v.pop());
-        assert_eq!(result.pop(), v.pop());
+    pub fn test_navigation_current_path(){
+        let root = std::fs::canonicalize(".").unwrap();
+        let files = travel_filesystem(root);
+        assert_eq!(5,files.len());
+        //for debug purposes use -- --nocapture to look at what it prints
+        for file in files {
+            println!("{}",file.display());
+        }
     }
 
     #[test]
-    pub fn test_search_dir() {
-        let Ok((mut file_list,mut dir_list)) = search_dir(PathBuf::from("folder_test")) 
-            else {return eprintln!("error in file system");};
-        
-        while let Some(list) = dir_list.pop() {
-            let Ok((mut dir_file_list,mut dir_dir_list)) = search_dir(list) 
-                else {
-                    return eprintln!("error in file system");
-                };
-            file_list.append(&mut dir_file_list);
-            dir_list .append(&mut dir_dir_list);
-        }
-
-        for file in file_list {
-            println!("{}",file.to_str().unwrap());
-        }
-
+    pub fn test_navigation_path(){
+        let directory = find_dir(PathBuf::from("project_navigator"));
+        let directory = match directory {
+            Some(dir) => dir,
+            None      => {
+                eprintln!("Error: no directory found");
+                std::process::exit(1)
+            },
+        };
+        let files = travel_filesystem(directory);
+        assert_eq!(5,files.len());
     }
 }
-
 
 
 
