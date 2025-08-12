@@ -1,6 +1,5 @@
 pub mod config;
 mod ls;
-//mod open; 
 
 use crate::config::*;
 

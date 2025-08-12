@@ -3,7 +3,6 @@ mod todo_parser;
 
 pub mod todo_list {
     use std::{fs,path::{PathBuf}};
-    use std::{collections::HashMap};
 
 
     /// creates a list of all todo of FileTodo

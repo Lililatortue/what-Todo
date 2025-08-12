@@ -1,5 +1,6 @@
 use cli_interface::config::Cli;
 use clap::Parser;
+
 /* command to implement:
  * ls { -p(to seperate by path), -v(to seperate by var) }
  * "var" creates symlink and opens it with neovim
