@@ -1,5 +1,6 @@
 pub mod config;
 mod ls;
+mod pretty_print;
 //mod open; 
 
 use crate::config::*;
