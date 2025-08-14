@@ -1,7 +1,7 @@
 pub mod config;
-mod ls;
 
-use crate::config::*;
+use crate::action::{ls,open};
+use crate::cli::config::{Command,Cli};
 
 pub fn run(cli: Cli)->Result<(),&'static str> { 
      let _ =match  cli.command {

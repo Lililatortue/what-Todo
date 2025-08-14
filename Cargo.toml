@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "cli_interface",
-  "todo_searcher",
-  "project_navigator", "ast_parser", 
+  "ast_parser", 
 ]
 

@@ -1,8 +1,7 @@
 mod comment_parser;
 mod todo_parser;
-
-pub mod todo_list {
-    use std::{fs,path::{PathBuf}};
+use std::{fs,path::{PathBuf}};
+use crate::pod::{FileTodo,Todo};
 
 
     /// creates a list of all todo of FileTodo
@@ -42,47 +41,7 @@ pub mod todo_list {
     }
 
 
-    use crate::{comment_parser, todo_parser }; 
-    #[derive(Debug)]
-    pub struct FileTodo {
-        pub path: PathBuf,
-        pub list: Vec<Todo>,
-    }
 
-    impl FileTodo {
-        pub fn filter_content<P>(&mut self, mut predicate: P)
-            where P: FnMut(&Todo)-> bool  
-        {
-            self.list.retain(|todo| predicate(todo))
-        }
-    }
-
-
-    /// Parses the &str and creates todos
-    /// this section copies to allow to freely use the
-    #[derive(Debug)]
-    pub struct Todo {
-        pub traits: String,
-        pub desc: String,
-    }
-
-    impl Todo {
-        pub fn new(traits: &str, desc: &str)->Self {
-            let traits = traits.trim().to_string();
-            let desc   = desc.trim().to_string();
-            Todo {traits: traits, desc: desc }
-        }
-
-
-        pub fn filter<P>(&mut self,mut predicate:P)->Option<Todo>
-            where 
-                P: FnMut(&mut Self)->Option<Todo>
-        {
-            predicate(self) 
-        }
-    }
-
-}
 
 
 

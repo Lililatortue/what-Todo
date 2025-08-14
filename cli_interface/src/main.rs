@@ -1,4 +1,10 @@
-use cli_interface::config::Cli;
+mod cli;
+mod navigation;
+mod action;
+mod parser;
+mod pod;
+
+use crate::cli::config::Cli;
 use clap::Parser;
 
 /* command to implement:
@@ -9,7 +15,7 @@ use clap::Parser;
 fn main() {
     env_logger::init();
 
-    match cli_interface::run(Cli::parse()) {
+    match cli::run(Cli::parse()) {
         Ok(ok)=> ok,
         Err(e)=>  eprintln!("{}",e),
     }

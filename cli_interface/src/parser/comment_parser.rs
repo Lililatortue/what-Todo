@@ -1,7 +1,7 @@
 pub mod iterators;
 use std::{collections::{VecDeque}, str};
 
-use crate::comment_parser::iterators::*;
+use crate::parser::comment_parser::iterators::*;
 
 
 #[derive(Debug)]

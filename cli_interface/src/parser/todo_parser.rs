@@ -4,7 +4,7 @@
 ///might add it to a special list if i see necessary
 /// so format would be:
 /// todo ' any amount of space' '()' 'any amount of space' '{}' all within the comments
-use crate::comment_parser::iterators::{IterCommentsQueueStr};
+use crate::parser::comment_parser::iterators::{IterCommentsQueueStr};
 const PATTERN:[char;3] = ['o','d','o'];
 
 
@@ -93,7 +93,7 @@ impl<'a> TodoStrBuilder<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{comment_parser};
+    use crate::parser::{comment_parser};
     /// 
     #[test]
     pub fn todo_parser() {

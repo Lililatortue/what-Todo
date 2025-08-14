@@ -1,6 +1,6 @@
 use std::{collections::vec_deque, str};
 
-use crate::comment_parser::*;
+use crate::parser::comment_parser::*;
 
 
 /// iterator that allows to grab a char from a str

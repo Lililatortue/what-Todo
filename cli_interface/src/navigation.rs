@@ -3,7 +3,8 @@ use std::{path::PathBuf};
 use ignore::WalkBuilder;
 use walkdir::{WalkDir};
 use rayon::prelude::*;
-use todo_searcher::todo_list::{FileTodo, create_list};
+use crate::parser;
+use crate::pod::FileTodo;
 /* 
  * searching all todos and listing them -> either by path or by var
  * 
@@ -55,7 +56,7 @@ pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
 pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
     let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
         let path = file.to_path_buf();
-        let todos = create_list(path.clone());
+        let todos = parser::create_list(path.clone());
         match todos {
             Ok(todo) =>Some(todo),
             Err(e)  =>{ log::warn!("{}",e); 

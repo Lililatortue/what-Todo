@@ -39,7 +39,7 @@ pub struct LsArgs {
         #[arg(short)]
         var: Option<String>
 }
-use crate::config;
+use crate::cli::config;
 
 
 impl LsArgs {
@@ -97,7 +97,12 @@ mod test {
     use super::*;
     #[test]
     pub fn test_ls_args(){
-       let arg = LsArgs {long: false, path_priority: false, path: Some(PathBuf::from("./src/lib.rs"))};
+        let arg = LsArgs {
+            long: false,
+            path_priority: false,
+            path: Some(PathBuf::from("./src/lib.rs")),
+            var:None
+       };
        let config = arg.build_config();
 
        assert_eq!(false, config.detail);

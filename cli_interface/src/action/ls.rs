@@ -1,6 +1,4 @@
-use project_navigator;
-
-use crate::Config;
+use crate::{cli::config::Config, navigation};
 
 pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
     let Config{ 
@@ -12,16 +10,16 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
         
         
         let path = match p {
-            Some(path) =>project_navigator::find_fs_location(path)?,
+            Some(path) =>navigation::find_fs_location(path)?,
             None       =>std::fs::canonicalize(".")?,
         };
-        let files = project_navigator::travel_filesystem(path);
-        let mut all_todo = project_navigator::parallele_file_processing(files);
+        let files = navigation::travel_filesystem(path);
+        let mut all_todo = navigation::parallele_file_processing(files);
         
         //filter to todo with only the variable
         if let Some(var) = variable {
             for t in all_todo.iter_mut() {
-                t.filter_content(|t| t.traits == var);
+                t.filter(|t| t.var == var);
             }
         }
         //build hashmap
@@ -51,7 +49,7 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
 mod table {
 use std::{collections::HashMap,path::{Path, PathBuf}};
 use comfy_table::{Table, presets::UTF8_FULL, ContentArrangement};
-use todo_searcher::todo_list::FileTodo;
+use crate::pod::FileTodo;
 
 fn shorten_path(path: &Path, depth: usize) -> String {
     let comps: Vec<_> = path.components().map(|c| c.as_os_str()).collect();
@@ -76,7 +74,7 @@ pub fn build_path_detail_table(all_todo: &[FileTodo]) -> Table {
 
         // detail rows
         for item in file.list.iter() {
-            table.add_row(vec!["", item.traits.as_str(), item.desc.as_str()]);
+            table.add_row(vec!["", item.var.as_str(), item.desc.as_str()]);
         }
     }
 
@@ -116,7 +114,7 @@ pub fn build_variable_detail_table(all_todo: &[FileTodo]) -> Table {
     for file in all_todo.iter() {
         let path_disp = shorten_path(&file.path, 3);
         for todo in file.list.iter() {
-            map.entry(&todo.traits).or_default().push((path_disp.clone(), &todo.desc))
+            map.entry(&todo.var).or_default().push((path_disp.clone(), &todo.desc))
         }
         
     }
@@ -144,7 +142,7 @@ pub fn build_variable_table(all_todo: &[FileTodo]) -> Table {
     for file in all_todo.iter() {
         let path_disp = shorten_path(&file.path, 3);
         for todo in file.list.iter() {
-            map.entry(&todo.traits).or_default().push((path_disp.clone(), &todo.desc))
+            map.entry(&todo.var).or_default().push((path_disp.clone(), &todo.desc))
         }
         
     }
