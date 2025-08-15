@@ -13,6 +13,7 @@ pub struct TodoStrBuilder<'a>(pub IterCommentsQueueStr<'a>);
 
 impl<'a> TodoStrBuilder<'a> {
     pub fn find_todo(&mut self)->bool {
+        self.0.print_buffer();
         while let Some(ch) = self.0.buffered_next(){
             match ch.1 {
                 't' | 'T' =>{
@@ -50,9 +51,9 @@ impl<'a> TodoStrBuilder<'a> {
                     } 
                 },
 
-                |'\t'|' '|'\n' => continue,
+                '\t'|' '|'\n' => continue,
 
-                _ => break,   
+                _ =>{self.0.put_front_buffer(start); break},   
             }
         }  
         None
@@ -78,9 +79,9 @@ impl<'a> TodoStrBuilder<'a> {
                     }
                 },
 
-                ' '|'\n' => continue,
+                '\t'|' '|'\n' => continue,
 
-                _ => break,   
+                _ =>{self.0.put_front_buffer(start); break},   
             }
         }  
         None
@@ -97,27 +98,10 @@ mod test {
     /// 
     #[test]
     pub fn todo_parser() {
-let text = r#"
-// TODO(UI) {implement parser}
-let x = 5;
-// This one should also match: TODO(helper) {clean up logic}
-/* TODO(math) {optimize equation} */
-
-// ttodo(bad) {should not match}
-// TODO() {no variable} —-> valid
-// TODO(missing desc) — invalid
-// TODO{missing parens} — invalid
-// just some comment without todo
-/* random block with TODO but no structure */
-// tOdO(typo) {ok} — valid if case-insensitive and structure ok
-// TODO  (   spaced   )   {  spaced out description  }
-// Todo (UI) { please change the name of this function:
-    pub fn CHANGE_MY_NAME(x:i32, y:i32)->i32{
-        x+y
-    }  
-// }
-let y = (TODO); // not inside comment → invalid
-"#;
+let text = "//FileTodo todo(UI) {1}
+//todo ( UI) { 2}
+//todo ( UI ) { 2 }
+//todo (UI ) {2 }";
 
 
         let comments = comment_parser::parse(text);

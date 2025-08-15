@@ -63,7 +63,7 @@ mod workspace {
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use crate::pod::FileTodo;
-use std::{env,fs};
+use std::{fs};
 
 //deletes itself when it goes out of scope
 pub struct VirtualWorkSpace(Box<PathBuf>);
@@ -73,7 +73,7 @@ impl VirtualWorkSpace {
     
     ///Sends a Box pointer to a path that resides in the temp file
     pub fn new(files:Vec<FileTodo>)->Result<Self, std::io::Error> {
-        let tmp_dir = env::temp_dir().join("what_todo");
+        let tmp_dir = PathBuf::from("/home/lililatortue/.cache/what_todo");
 
         if tmp_dir.exists() {
             let _ = fs::remove_dir_all(&tmp_dir);
@@ -92,7 +92,7 @@ impl VirtualWorkSpace {
                                             ||std::ffi::OsStr::new("unamed")
                                         )
             );
-            fs::hard_link(file.get_path(), link)?;
+            fs::hard_link(file.get_path(), &link)?;
         }
         
         Ok(VirtualWorkSpace(Box::new(tmp_dir)))   

@@ -84,7 +84,9 @@ impl<'a> IterCommentsQueueStr<'a> {
     pub fn clear_buffer(&mut self) {
         self.buffer.clear();
     }
-
+    pub fn print_buffer(&mut self) {
+        println!("buffer = {:?}",&self.buffer);
+    }
     ///returns true when pattern match
     ///else it returns false DOES NOT CLEAR THE BUFFER
     pub fn check_pattern<F>(&mut self,mut op: F,pattern: Vec<char>)->bool
