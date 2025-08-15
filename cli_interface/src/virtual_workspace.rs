@@ -1,41 +1,3 @@
-use clap::command;
-
-use crate::cli::config::Config;
-use crate::navigation;
-pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
-       let Config{ 
-        detail:_,              
-        path_priority: _,    //sort with path instead of var?
-        var: variable,              //lazy filter with variable
-        path: p,
-    } = config;
-
-    let path = match p {
-        Some(path) =>navigation::find_fs_location(path)?,
-        None       =>std::fs::canonicalize(".")?,
-    };
-
-    let files = navigation::travel_filesystem(path);
-    let mut all_todo = navigation::parallele_file_processing(files);
-        
-    //filter to todo with only the variable
-    match variable {
-                Some(var) =>{   
-                    for t in all_todo.iter_mut() {
-                        t.filter(|t| t.var == var);
-                    }
-                }
-                None => eprintln!(""),
-     };
- 
-    std::process::Command("nvim").arg().status()?;
-    Ok(())
-}
-
-
-
-mod workspace {
-
 use std::path::PathBuf;
 use crate::pod::FileTodo;
 use std::os::unix::fs::{self as unix_fs};
@@ -84,8 +46,3 @@ impl Drop for VirtualWorkSpace {
         }
     }
 }
-
-}
-
-
-

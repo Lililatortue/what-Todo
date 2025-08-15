@@ -1,19 +1,16 @@
 use std::{path::PathBuf};
-
 use ignore::WalkBuilder;
 use walkdir::{WalkDir};
 use rayon::prelude::*;
-use crate::parser;
+use crate::parser::create_list;
 use crate::pod::FileTodo;
+
 /* 
  * searching all todos and listing them -> either by path or by var
  * 
  * opening all files concerned with todo
  *
  * */
-fn is_hidden(name: &str)-> bool {
-    name.starts_with('.')
-}
 
 fn is_binary_ext(path:& PathBuf)-> bool {
     matches!(path.extension().and_then(|ext| ext.to_str()),
@@ -39,6 +36,7 @@ pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
         .collect()
 }
 
+
 pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
     let root = std::fs::canonicalize(".").unwrap();
     for directory in WalkDir::new(root)
@@ -56,11 +54,13 @@ pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
 pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
     let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
         let path = file.to_path_buf();
-        let todos = parser::create_list(path.clone());
+        let todos = create_list(path.clone());
         match todos {
             Ok(todo) =>Some(todo),
-            Err(e)  =>{ log::warn!("{}",e); 
-                        None},
+            Err(e)  =>{ 
+                log::warn!("{}",e); 
+                None
+            },
         }
     }).collect();
     parsed_files 
@@ -97,7 +97,6 @@ mod test {
         assert_eq!(5,files.len());
     }
 }
-
 
 
 

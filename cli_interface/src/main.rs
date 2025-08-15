@@ -3,6 +3,8 @@ mod navigation;
 mod action;
 mod parser;
 mod pod;
+mod virtual_workspace;
+
 
 use crate::cli::config::Cli;
 use clap::Parser;
