@@ -13,9 +13,12 @@ pub fn run(cli: Cli)->Result<(),&'static str> {
             }
         },
         //not supported yet working on it
-        Command::Open (_arg) => { Ok(())
-            //let config = arg.build_config();
-            //open_in_editor(config)?;
+        Command::Open (arg) => {
+            let config = arg.build_config();
+            match open::open_in_editor(config) {
+                Ok(_) => Ok(()),
+                Err(e)=>Err(e),
+            }
         }, 
     };
     Ok(())

@@ -1,7 +1,8 @@
-use clap::command;
-
 use crate::cli::config::Config;
 use crate::navigation;
+
+
+
 pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
        let Config{ 
         detail:_,              
@@ -25,10 +26,19 @@ pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'st
                         t.filter(|t| t.var == var);
                     }
                 }
-                None => eprintln!(""),
-     };
- 
-    std::process::Command("nvim").arg().status()?;
+                None => eprintln!("Error: to open in nvim pls insert variables"),
+    };
+    let workspace = match workspace::VirtualWorkSpace::new(&all_todo) {
+        Ok(ok)=> ok,
+        Err(_)=>{
+            eprintln!("error in creation of symlink");
+            std::process::exit(1)
+        },
+    };
+
+    std::process::Command::new("nvim")
+         .arg(workspace.get_osString())
+        .status()?;
     Ok(())
 }
 
@@ -36,6 +46,7 @@ pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'st
 
 mod workspace {
 
+use std::ffi::OsStr;
 use std::path::PathBuf;
 use crate::pod::FileTodo;
 use std::os::unix::fs::{self as unix_fs};
@@ -73,12 +84,16 @@ impl VirtualWorkSpace {
         
         Ok(VirtualWorkSpace(Box::new(tmp_dir)))      
     }
+
+    pub fn get_osString(&self)-> &OsStr {
+        self.0.as_os_str()
+    }
 }
 
 impl Drop for VirtualWorkSpace {
     
     fn drop(&mut self) {
-        match fs::remove_dir(&**self.0){
+        match fs::remove_dir_all(&**self.0){
             Err(_) => eprintln!("[FATAL] Error tmp/workspace not deleted"),
             Ok(_)  => println!("Virtual workspace deleted"),
         }
