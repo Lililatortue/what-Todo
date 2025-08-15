@@ -1,5 +1,5 @@
 use crate::{cli::config::Config, navigation};
-
+use crate::pod::FileTodo;
 pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
     let Config{ 
         detail:details,              //do we include desc
@@ -14,30 +14,36 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
             None       =>std::fs::canonicalize(".")?,
         };
         let files = navigation::travel_filesystem(path);
-        let mut all_todo = navigation::parallele_file_processing(files);
+        let all_todo = navigation::parallele_file_processing(files);
         
         //filter to todo with only the variable
-        if let Some(var) = variable {
-            for t in all_todo.iter_mut() {
-                t.filter(|t| t.var == var);
+        let filter = match variable {
+            Some(var) =>{   
+                all_todo.into_iter()
+                        .filter_map(|todo|todo.into_filter(|t| t.var == var))
+                        .collect::<Vec<FileTodo>>()
+
             }
-        }
+        None => all_todo,
+        };
+
+        println!("{:?}\n",&filter); 
         //build hashmap
         match (priority, details) {
             (true,true)  => { 
-               let t = table::build_path_detail_table(&all_todo);
+               let t = table::build_path_detail_table(&filter);
                print!("{}",t);
             }
             (true,false) => {
-                let t = table::build_path_table(&all_todo);
+                let t = table::build_path_table(&filter);
                 print!("{}",t);
             }
             (false,true) => {
-                let t = table::build_variable_detail_table(&all_todo);
+                let t = table::build_variable_detail_table(&filter);
                 print!("{}",t);
             }
             (false,false)=> {
-                let t = table::build_variable_table(&all_todo);
+                let t = table::build_variable_table(&filter);
                 print!("{}",t); 
             }
         }

@@ -58,10 +58,11 @@ pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
         match todos {
             Ok(todo) =>Some(todo),
             Err(e)  =>{ 
-                log::warn!("{}",e); 
+                log::warn!("{}",e);
                 None
             },
         }
+        
     }).collect();
 
     parsed_files 

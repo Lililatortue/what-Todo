@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-
 //Todo (encapsulation) {remove pub and fix the outcomes}
     #[derive(Debug)]
     pub struct FileTodo {
@@ -8,6 +7,9 @@ use std::path::PathBuf;
     }
 
     impl FileTodo {
+        pub fn new(path:PathBuf,list:Vec<Todo>)-> Self{
+            FileTodo {path, list: list}
+        }
         pub fn get_list(&self)-> &Vec<Todo> {
             &self.list
         }
@@ -15,10 +17,20 @@ use std::path::PathBuf;
             &self.path
         }
 
-        pub fn filter<P>(&mut self, mut predicate: P)
+        pub fn into_filter<P>(self, mut predicate: P)-> Option<Self>
             where P: FnMut(&Todo)-> bool  
         {
-            self.list.retain(|todo| predicate(todo))
+            let list:Vec<Todo> = Vec::new();
+            let mut new_self = FileTodo::new(self.path,list);
+            for todo in self.list {      
+                if predicate(&todo) {
+                    new_self.list.push(todo);
+                }
+            }
+            if new_self.list.is_empty(){
+                return None
+            };
+            Some(new_self)
         }
     }
 
