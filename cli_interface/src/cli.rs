@@ -15,6 +15,7 @@ pub fn run(cli: Cli)->Result<(),&'static str> {
         //not supported yet working on it
         Command::Open (arg) => {
             let config = arg.build_config();
+            println!("wowo");
             match open::open_in_editor(config) {
                 Ok(_) => Ok(()),
                 Err(e)=>Err(e),

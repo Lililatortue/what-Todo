@@ -64,7 +64,10 @@ pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
         }
     }).collect();
 
-    parsed_files 
+    match parsed_files.is_empty() {
+        true => Some(parsed_files),
+        false=> None,
+    }
 }
 
 

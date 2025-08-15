@@ -61,34 +61,21 @@ impl LsArgs {
 
 #[derive(Args, Debug)]
 pub struct OpenArgs {
+    #[arg(short)]
     path: Option<PathBuf>,
+    #[arg(short)]
     var : Option<String>,
 }
 
 impl OpenArgs {
     ///takes a var and a path this function doesnt check if var exist
     ///only if arguments are provided
-    pub fn build_config(mut self)-> config::Config {
-        let var = match self.var.take() {
-            Some(s) => s,
-            None    => {
-                eprintln!(
-                    "Error: lack of variable. Please add a variable. \
-                    \n Expected Format: todo open <VAR> <Optional(PATH)>");
-                std::process::exit(1);
-            }
-        };
-
-        let path = match self.path.take() {
-            Some(p) => p,
-            None    => env::current_dir().expect("Error: Can't find current directory"),
-        };
-
+    pub fn build_config(self)-> config::Config {    
         config::Config {
             detail: false,
             path_priority: false,
-            path: Some(path),
-            var : Some(var),
+            path: self.path,
+            var : self.var,
         }
     }
 }

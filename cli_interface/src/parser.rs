@@ -37,7 +37,11 @@ use crate::pod::{FileTodo,Todo};
 
             file_todo.list.push(todo)
         }
-        Ok(file_todo) 
+        match !file_todo.list.is_empty() {
+            true =>Ok(file_todo), 
+            false=> return Err(format!("empty file")),
+
+        }
     }
 
 
