@@ -13,7 +13,6 @@ pub struct TodoStrBuilder<'a>(pub IterCommentsQueueStr<'a>);
 
 impl<'a> TodoStrBuilder<'a> {
     pub fn find_todo(&mut self)->bool {
-        self.0.print_buffer();
         while let Some(ch) = self.0.buffered_next(){
             match ch.1 {
                 't' | 'T' =>{
@@ -98,10 +97,10 @@ mod test {
     /// 
     #[test]
     pub fn todo_parser() {
-let text = "//FileTodo todo(UI) {1}
-//todo ( UI) { 2}
-//todo ( UI ) { 2 }
-//todo (UI ) {2 }";
+let text = "//FileTodo todo(test_UI) {1}
+//todo ( test_UI) { 2}
+//todo ( test_UI ) { 2 }
+//todo (test_UI ) {2 }";
 
 
         let comments = comment_parser::parse(text);

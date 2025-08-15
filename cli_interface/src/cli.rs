@@ -1,4 +1,6 @@
 pub mod config;
+pub mod launch_check;
+
 
 use crate::action::{ls,open};
 use crate::cli::config::{Command,Cli};

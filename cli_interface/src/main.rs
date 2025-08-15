@@ -5,7 +5,7 @@ mod parser;
 mod pod;
 
 
-use crate::cli::config::Cli;
+use crate::cli::{lauch_check,config::Cli};
 use clap::Parser;
 
 /* command to implement:
@@ -15,6 +15,7 @@ use clap::Parser;
  * */
 fn main() {
     env_logger::init();
+    cli::lauch_check::init();
 
     match cli::run(Cli::parse()) {
         Ok(ok)=> ok,
