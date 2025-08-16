@@ -2,7 +2,7 @@ use crate::cli::config::Config;
 use crate::navigation;
 use crate::pod::FileTodo;
 
-
+//todo (app_path) { assurer que lenvironment souvre dans cache}
 pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
        let Config{ 
         detail:_,              

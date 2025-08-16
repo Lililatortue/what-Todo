@@ -11,7 +11,7 @@ use std::{env,fs, path::PathBuf};
  * */
 
 pub fn init()->std::io::Result<()> { 
-    let parent = find_home().join("what_todo/");
+    let parent = find_home().join(".what_todo/");
     let cache_path = parent.join(".cache/");
     let log_path = parent.join("logs.log"); 
     let journal_path = parent.join("journal.txt");
@@ -19,10 +19,10 @@ pub fn init()->std::io::Result<()> {
     fs::create_dir_all(&cache_path)?;
 
     if !log_path.exists(){
-        fs::File::create(log_path);
+        fs::File::create(log_path)?;
     }
     if !journal_path.exists(){
-        fs::File::create(journal_path);     
+        fs::File::create(journal_path)?;     
     }
     Ok(())
 }

@@ -27,7 +27,7 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
         None => all_todo,
         };
 
-        println!("{:?}\n",&filter); 
+
         //build hashmap
         match (priority, details) {
             (true,true)  => { 

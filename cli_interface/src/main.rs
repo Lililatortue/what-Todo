@@ -3,9 +3,9 @@ mod navigation;
 mod action;
 mod parser;
 mod pod;
+mod utilz;
 
-
-use crate::cli::{lauch_check,config::Cli};
+use crate::cli::{launch_check,config::Cli};
 use clap::Parser;
 
 /* command to implement:
@@ -15,7 +15,8 @@ use clap::Parser;
  * */
 fn main() {
     env_logger::init();
-    cli::lauch_check::init();
+    launch_check::init()
+        .unwrap_or_else(|e|{eprintln!("{e}"); std::process::exit(1)});
 
     match cli::run(Cli::parse()) {
         Ok(ok)=> ok,
