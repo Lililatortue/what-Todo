@@ -1,12 +1,15 @@
 pub mod config;
-pub mod launch_check;
-
 
 use crate::action::{ls,open};
 use crate::cli::config::{Command,Cli};
 
 pub fn run(cli: Cli)->Result<(),&'static str> { 
-     let _ =match  cli.command {
+    match crate::fs_management::setup() {  
+        Err(e) => eprint!("{}",e),
+        _ => (),
+    };
+
+    let _ =match  cli.command {
         Command::Ls(arg)=> {
             let config = arg.build_config();
             match ls::list_todo(config) {

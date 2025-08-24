@@ -6,6 +6,7 @@ use crate::parser::comment_parser::iterators::*;
 
 #[derive(Debug)]
 pub struct CommentsQueue<'a>(VecDeque<Comments<'a>>);
+
 impl<'a> CommentsQueue<'a> {
     pub fn new()-> Self {
         CommentsQueue(VecDeque::new())
@@ -58,7 +59,7 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
     while let Some((_, ch)) = iter.next() {
         let ch2 = iter.by_ref().peek();
         match(ch, ch2){
-            ('/',Some(&(_,'/')))=>{
+            ('/',Some(&(_,'/')))=> {
                 let Some((start,_)) = iter.next() else { break };
 
                 let mut end = start;
@@ -74,7 +75,7 @@ pub fn parse<'a>(text: &'a str) -> CommentsQueue<'a> {
                 };
                 parsed_text.queue(com);
             },
-            ('/',Some(&(_,'*')))=>{
+            ('/',Some(&(_,'*')))=> {
                 let Some((start,_)) = iter.next() else { break };
 
                 let mut end = start;
