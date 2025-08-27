@@ -1,20 +1,35 @@
-use crate::{cli::config::Config, navigation};
+use crate::{cli::config::LsConfig, navigation::*};
 use crate::pod::FileTodo;
-pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
-    let Config{ 
-        detail:details,              //do we include desc
+use crate::startup;
+
+
+type TomlConfig = (startup::ParserConfig, startup::CommentConfig);
+
+pub fn list_todo(args_config:LsConfig, toml_config:TomlConfig)
+    ->Result<(),Box<(dyn std::error::Error+ 'static)>> 
+{
+//-----------------deconstructing configs and building data-------------------------//
+    let LsConfig{ 
+        detail:details,             //do we include desc
         path_priority: priority,    //sort with path instead of var?
-        var: variable,              //lazy filter with variable
-        path: p,                  //is it path specifique
-    } = config; 
-        
-        
+        variable: variable,         //lazy filter with variable
+        path: p,                    //is it path specifique
+    } = args_config;   
+    let (parser_config, comment_config) = toml_config;
+    let graphs = (parser_config.into_nfa(), comment_config.into_nfa()); 
+    
+//--------------------find concerned files-------------------------//
         let path = match p {
-            Some(path) =>navigation::find_fs_location(path)?,
+            Some(path) =>find_fs_location(path)?,
             None       =>std::fs::canonicalize(".")?,
         };
-        let files = navigation::travel_filesystem(path);
-        let all_todo = navigation::parallele_file_processing(files);
+        //finding concerned type of files to parse 
+        //for example if toml_config contains c and cpp only
+        //it will only find c and cpp
+        let files = travel_filesystem(path, graphs.1.get_extensions());
+
+//-----------------------find todos-------------------------------//
+        let all_todo = parallele_file_processing(files,graphs);
         
         //filter to todo with only the variable
         let filter = match variable {
@@ -22,11 +37,12 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
                 all_todo.into_iter()
                         .filter_map(|todo|todo.into_filter(|t| t.var == var))
                         .collect::<Vec<FileTodo>>()
-
             }
-        None => all_todo,
+            None => all_todo,
         };
 
+
+//----------------------build table-------------------------------//
         println!("{:?}\n",&filter); 
         //build hashmap
         match (priority, details) {
@@ -50,6 +66,12 @@ pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>
         
         Ok(())
 }
+
+
+
+
+
+
 
 //super repetitive
 mod table {

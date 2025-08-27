@@ -1,6 +1,6 @@
 use std::{fs};
 
-use crate::utils::folder_structure::{self, folder};
+use crate::utils::folder_structure::{self};
 
 /*  what-todo folder manipulation responsible for files
  *  full file structure is 
@@ -32,26 +32,27 @@ use crate::utils::folder_structure;
 
 
     //default content of file
-    static DEFAULT_CONTENT:&str =r"[[parser]]
-keyword      = todo|note
-variable     = \(.*\)+
-description  = \{.*\}+
-...
+    static DEFAULT_CONTENT:&str =r#"[parser]
+keyword      = "todo|note"
+variable     = "\\(.*\\)+"
+description  = "\\{.*\\}+"
+
 
 [[rule]]
-comment_block = /\*.*\*/
-comment_line  = (//.*\n)* 
-extension     = [c, cpp, rs, cs, java, swift, go, typescript]
+comment_block = "/\\*.*\\*/"
+comment_line  = "(//.*\n)*" 
+extension     = ["c", "cpp", "rs", "cs", "java", "swift", "go", "ts"]
 
 [[rule]]
-comment_block = /*.*\*/
-comment_line  = (--.*\n)*
-extension     = [sql]
+comment_block = "/*.*\\*/"
+comment_line  = "(--.*\n)*"
+extension     = ["sql"]
 
 [[rule]]
-comment_block = <!--.*-->
-comment_line  = None
-extension     = [html]";
+comment_block = "<!--.*-->"
+comment_line  = "None"
+extension     = ["html"]
+"#;
 
 
     ///init config file if exists do nothing
@@ -62,7 +63,8 @@ extension     = [html]";
             println!("Config exist");
             Ok(())
         } else {
-            let _ =fs::write(config,DEFAULT_CONTENT);
+            println!("Creating a config file...");
+            fs::write(config,DEFAULT_CONTENT)?;
             Ok(())
         }
     }
@@ -84,4 +86,19 @@ pub mod journal {
     pub fn refresh(){
 
     }
+}
+
+
+
+#[cfg(test)]
+
+mod test {
+    use super::*;
+    #[test]
+    pub fn test_fs_management(){
+        let _ =setup();
+
+    }
+
+
 }

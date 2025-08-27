@@ -4,7 +4,7 @@
 /// static path nomenclature
 /// get quick acces to folder
 pub mod folder_structure {
-    use std::{env, path::{Path, PathBuf}};
+    use std::{env, path::{PathBuf}};
 
 
     static PATH:      &str = ".what_todo";

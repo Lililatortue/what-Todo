@@ -1,11 +1,11 @@
 pub mod utils;
+mod startup;
 mod fs_management;
 mod cli;
 mod navigation;
 mod action;
 mod parser;
 mod pod;
-
 
 use crate::cli::{config::Cli};
 use clap::Parser;

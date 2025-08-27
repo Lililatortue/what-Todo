@@ -1,27 +1,27 @@
-mod comment_parser;
-mod todo_parser;
-use std::{fs,path::{PathBuf}};
-use crate::pod::{FileTodo,Todo};
+mod parser;
+mod regex_generator;
+
+
+use std::{path::{PathBuf}};
+use crate::pod::{FileTodo};
 
 
     /// creates a list of all todo of FileTodo
     pub fn create_list(path: PathBuf) -> Result<FileTodo,String> {  
-        let mut file_todo = FileTodo {path:path, list:Vec::new()};
+      /*  let mut file_todo = FileTodo {path:path, list:Vec::new()};
 
         let text = match fs::read_to_string(&file_todo.path){
             Ok(text) => text,
             Err(_) =>return Err(format!("Error in files {}",&file_todo.path.display()))
         };
          
-        let parsed_text = comment_parser::parse(&text);
+        //let parsed_text = comment_parser::parse(&text);
         let iter = match parsed_text.iter() {
             Some(content) => content,
             None => return Err(format!("no comments in this file skipping {}",&file_todo.path.display())),
         };
 
-        let mut builder = todo_parser::TodoStrBuilder(iter);
-// todo (UI) {for hardlink}
-// todo (UI) {for hardlink}  
+        //let mut builder = todo_parser::TodoStrBuilder(iter);
         loop {
             if !builder.find_todo(){
                 break;
@@ -42,7 +42,8 @@ use crate::pod::{FileTodo,Todo};
             true =>Ok(file_todo), 
             false=> return Err(format!("empty file")),
 
-        }
+        }*/
+        Ok(FileTodo { path: PathBuf::from("d"), list: vec![] })
     }
 
 
