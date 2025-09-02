@@ -1,5 +1,3 @@
-use miniregex::graph::GraphCursor;
-use std::collections::HashMap;
 use crate::parser::regex_generator::{LexerGraphs, PARSER_NFA};
 
 pub struct Parser {
@@ -7,11 +5,11 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new()->Self {
-        let target = PARSER_NFA;
-        Parser{parser_lexer: PARSER_NFA} 
-    }
+    pub fn get_comment_data(&self) {
+        let rule = self.parser_lexer;
+        
         
 
 
+    }
 }

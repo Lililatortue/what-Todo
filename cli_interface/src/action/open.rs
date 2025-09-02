@@ -1,10 +1,10 @@
-use crate::cli::config::Config;
+use crate::cli::config::ArgsConfig;
 use crate::navigation;
 use crate::pod::FileTodo;
 
 
-pub fn open_in_editor(config: Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
-       let Config{ 
+pub fn open_in_editor(config: ArgsConfig)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
+       let ArgsConfig{ 
         detail:_,              
         path_priority: _,    //sort with path instead of var?
         var: variable,              //lazy filter with variable

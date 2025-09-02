@@ -38,17 +38,17 @@ variable     = "\\(.*\\)+"
 description  = "\\{.*\\}+"
 
 
-[[rule]]
+[comments]
 comment_block = "/\\*.*\\*/"
-comment_line  = "(//.*\n)*" 
+comment_line  = "(//.*)*" 
 extension     = ["c", "cpp", "rs", "cs", "java", "swift", "go", "ts"]
 
-[[rule]]
+[comments]
 comment_block = "/*.*\\*/"
 comment_line  = "(--.*\n)*"
 extension     = ["sql"]
 
-[[rule]]
+[comments]
 comment_block = "<!--.*-->"
 comment_line  = "None"
 extension     = ["html"]

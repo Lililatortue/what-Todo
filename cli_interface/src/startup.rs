@@ -116,8 +116,8 @@ impl CommentGraphs {
         } 
     }
 
-    pub fn get_extensions(&self)->HashSet<&String> {
-        let mut hs = HashSet::new();
+    pub fn get_extensions(&self)->HashSet<&str> {
+        let mut hs:HashSet<&str> = HashSet::new();
         for (key,_) in self.list.iter() {
             hs.insert(key);
         }

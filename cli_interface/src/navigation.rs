@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::{path::PathBuf};
 use ignore::WalkBuilder;
 use walkdir::{WalkDir};
@@ -5,21 +6,9 @@ use rayon::prelude::*;
 use crate::parser::create_list;
 use crate::pod::FileTodo;
 
-/* 
- * searching all todos and listing them -> either by path or by var
- * 
- * opening all files concerned with todo
- *
- * */
 
-fn is_binary_ext(path:& PathBuf)-> bool {
-    matches!(path.extension().and_then(|ext| ext.to_str()),
-              Some("exe" | "dll" | "so" | "bin" | "class" | "o" | "a"
-            | "jpg" | "jpeg" | "png" | "gif" | "pdf" | "zip" | "tar" | "gz")   
-            )
-}
 
-pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
+pub fn travel_filesystem(path: PathBuf, hash :HashSet<&str>)->Vec<PathBuf> {
     let walk = WalkBuilder::new(path)
         .hidden(true)       
         .ignore(true)               
@@ -32,7 +21,9 @@ pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
         walk.filter_map(Result::ok)                                  
         .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
         .map(|e| e.into_path())
-        .filter(|p| !is_binary_ext(p))                          
+        .filter(|p| p.extension()
+                     .and_then(|ext|ext.to_str())
+                     .map_or(false,|ext| hash.contains(ext)))                
         .collect()
 }
 

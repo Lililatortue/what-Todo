@@ -15,6 +15,7 @@ pub fn list_todo(args_config:LsConfig, toml_config:TomlConfig)
         variable: variable,         //lazy filter with variable
         path: p,                    //is it path specifique
     } = args_config;   
+
     let (parser_config, comment_config) = toml_config;
     let graphs = (parser_config.into_nfa(), comment_config.into_nfa()); 
     
