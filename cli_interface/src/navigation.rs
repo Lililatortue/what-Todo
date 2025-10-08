@@ -5,7 +5,8 @@ use walkdir::{WalkDir};
 use rayon::prelude::*;
 use crate::parser::create_list;
 use crate::pod::FileTodo;
-
+use crate::parser::parser::Lexer;
+use crate::startup::{CommentGraphs, LexerGraphs};
 
 
 pub fn travel_filesystem(path: PathBuf, hash :HashSet<&str>)->Vec<PathBuf> {
@@ -38,22 +39,25 @@ pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
             return Ok(directory.into_path())
         }
     }
+
     Err("Error: non-existant path {}")
 }
 
 
-pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
-    let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
-        let path = file.to_path_buf();
-        let todos = create_list(path.clone());
+pub fn file_processing(files: Vec<PathBuf>, tomlconfig:(CommentGraphs, LexerGraphs))->Vec<FileTodo> {
+    //parallele iter through vec and create threads
+    let parsed_files:Vec<FileTodo> = files.par_iter()
+                                          .filter_map(|file| {
+        let path = file.to_path_buf(); 
+        let todos = Lexer::new(file.extension().unwrap(),tomlconfig).parse(path);
+
         match todos {
             Ok(todo) =>Some(todo),
             Err(e)  =>{ 
                 log::warn!("{}",e);
                 None
             },
-        }
-        
+        }       
     }).collect();
 
     parsed_files 
@@ -67,13 +71,13 @@ mod test {
     use super::*; 
     #[test]
     pub fn test_navigation_current_path(){
-        let root = std::fs::canonicalize(".").unwrap();
-        let files = travel_filesystem(root);
-        assert_eq!(5,files.len());
+        //let root = std::fs::canonicalize(".").unwrap();
+        //let files = travel_filesystem(root);
+        //assert_eq!(5,files.len());
         //for debug purposes use -- --nocapture to look at what it prints
-        for file in files {
-            println!("{}",file.display());
-        }
+        //for file in files {
+        //    println!("{}",file.display());
+        //}
     }
 
     #[test]

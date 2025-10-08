@@ -20,13 +20,14 @@ pub fn setup()->std::io::Result<()> {
     fs::create_dir(cache)?;
 
 
-    toml::init()?;
+    config::init()?;
     journal::init();    
 
     Ok(())
 }
 
-pub mod toml {
+
+pub mod config {
 use std::{fs};
 use crate::utils::folder_structure;
 
@@ -40,7 +41,7 @@ description  = "\\{.*\\}+"
 
 [comments]
 comment_block = "/\\*.*\\*/"
-comment_line  = "(//.*)*" 
+comment_line  = "(//.*\n)*" 
 extension     = ["c", "cpp", "rs", "cs", "java", "swift", "go", "ts"]
 
 [comments]
@@ -51,7 +52,7 @@ extension     = ["sql"]
 [comments]
 comment_block = "<!--.*-->"
 comment_line  = "None"
-extension     = ["html"]
+extension     = ["html, xml"]
 "#;
 
 
@@ -99,6 +100,4 @@ mod test {
         let _ =setup();
 
     }
-
-
 }

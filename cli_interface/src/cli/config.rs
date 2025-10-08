@@ -8,6 +8,11 @@ pub struct Cli {
     #[command(subcommand)]
     pub command:Command,
 }
+#[derive(Debug,Subcommand)]
+pub enum Command {
+    Ls(LowArgsConfig),
+    Open(LowArgsConfig)
+}
 
 
 /// struct with the sole purpose of handling default behavior  
@@ -23,18 +28,6 @@ pub struct LowArgsConfig {
     #[arg(long,default_value=None)]
     pub path: Option<PathBuf>,
 }
-
-
-#[derive(Debug,Subcommand)]
-pub enum Command {
-    Ls(LowArgsConfig),
-    Open(LowArgsConfig)
-}
-
-
-
-
-
 impl LowArgsConfig {
     pub fn build_ls_config(self)->LsConfig {
         LsConfig {
@@ -54,19 +47,19 @@ impl LowArgsConfig {
 
 }
 
-//------------------POD-------------------//
-pub struct OpenConfig {
-    pub variable: Option<String>,
-    pub path: Option<PathBuf>
-}
 
+
+//------------------POD-------------------//
 pub struct LsConfig{
     pub detail:bool,
     pub path_priority:bool,
     pub variable:Option<String>,
     pub path:Option<PathBuf>
 }
-
+pub struct OpenConfig {
+    pub variable: Option<String>,
+    pub path: Option<PathBuf>
+}
 
 
 #[cfg(test)]
@@ -89,12 +82,17 @@ mod test {
 
     #[test]
     pub fn test_open_args(){
-       let arg = LowArgsConfig {long = variable: Some("apple".to_string()), path: None};
-       let config = arg.build_Open_config();
+       let arg = LowArgsConfig {
+           long: false,
+           path_priority:false,
+           variable: Some("apple".to_string()),
+           path: None
+       };
 
-       assert_eq!(false, config.detail);
-       assert_eq!(false,config.path_priority);
-       assert_eq!(Some("apple"), config.var.as_deref());
+       let config = arg.build_open_config();
+
+       assert_eq!(None,config.path);
+       assert_eq!(Some("apple"), config.variable.as_deref());
     }
 
 }

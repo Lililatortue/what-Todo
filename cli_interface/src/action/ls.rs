@@ -3,7 +3,8 @@ use crate::pod::FileTodo;
 use crate::startup;
 
 
-type TomlConfig = (startup::ParserConfig, startup::CommentConfig);
+type TomlConfig = (startup::LexerGraphs, startup::CommentGraphs);
+
 
 pub fn list_todo(args_config:LsConfig, toml_config:TomlConfig)
     ->Result<(),Box<(dyn std::error::Error+ 'static)>> 
@@ -16,8 +17,7 @@ pub fn list_todo(args_config:LsConfig, toml_config:TomlConfig)
         path: p,                    //is it path specifique
     } = args_config;   
 
-    let (parser_config, comment_config) = toml_config;
-    let graphs = (parser_config.into_nfa(), comment_config.into_nfa()); 
+    let (_, comment_graphs) = &toml_config;
     
 //--------------------find concerned files-------------------------//
         let path = match p {
@@ -27,19 +27,20 @@ pub fn list_todo(args_config:LsConfig, toml_config:TomlConfig)
         //finding concerned type of files to parse 
         //for example if toml_config contains c and cpp only
         //it will only find c and cpp
-        let files = travel_filesystem(path, graphs.1.get_extensions());
+        let files = travel_filesystem(path, comment_graphs.get_extensions());
+
 
 //-----------------------find todos-------------------------------//
-        let all_todo = parallele_file_processing(files,graphs);
+        let todos = file_processing(files,&toml_config);
         
         //filter to todo with only the variable
         let filter = match variable {
-            Some(var) =>{   
-                all_todo.into_iter()
+            Some(var) => {   
+                todos.into_iter()
                         .filter_map(|todo|todo.into_filter(|t| t.var == var))
                         .collect::<Vec<FileTodo>>()
             }
-            None => all_todo,
+            None      => todos,
         };
 
 
@@ -91,10 +92,10 @@ fn shorten_path(path: &Path, depth: usize) -> String {
 
 pub fn build_path_detail_table(all_todo: &[FileTodo]) -> Table {
     let mut table = Table::new();
-    table
-        .load_preset(UTF8_FULL)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["path", "variable", "description"]);
+    
+    table.load_preset(UTF8_FULL)
+         .set_content_arrangement(ContentArrangement::Dynamic)
+         .set_header(vec!["path", "variable", "description"]);
 
     for file in all_todo.iter() {
         let path_disp = shorten_path(&file.path, 3); 
