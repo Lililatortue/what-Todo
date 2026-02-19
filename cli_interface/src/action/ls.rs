@@ -1,31 +1,20 @@
 use crate::{cli::config::Config, navigation};
 use crate::pod::FileTodo;
 pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
-    let Config{ 
-        detail:details,              //do we include desc
-        path_priority: priority,    //sort with path instead of var?
-        var: variable,              //lazy filter with variable
-        path: p,                  //is it path specifique
-    } = config; 
+    let files = navigation::travel_filesystem(path);
+    let all_todo = navigation::parallele_file_processing(files);
         
-        
-        let path = match p {
-            Some(path) =>navigation::find_fs_location(path)?,
-            None       =>std::fs::canonicalize(".")?,
-        };
-        let files = navigation::travel_filesystem(path);
-        let all_todo = navigation::parallele_file_processing(files);
-        
-        //filter to todo with only the variable
-        let filter = match variable {
-            Some(var) =>{   
-                all_todo.into_iter()
-                        .filter_map(|todo|todo.into_filter(|t| t.var == var))
-                        .collect::<Vec<FileTodo>>()
+    //filter to todo with only the variable
+    let filter = match variable {
+        Some(var) =>{   
+            all_todo.into_iter()
+                    .filter_map(|todo|todo.into_filter(|t| t.var == var))
+                    .collect::<Vec<FileTodo>>()
 
             }
         None => all_todo,
         };
+
 
         println!("{:?}\n",&filter); 
         //build hashmap
