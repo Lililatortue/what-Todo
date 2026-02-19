@@ -1,11 +1,9 @@
 mod cli;
-mod navigation;
-mod action;
-mod parser;
-mod pod;
+//mod navigation;
+//mod parser;
+//mod pod;
 
-
-use crate::cli::config::Cli;
+use crate::cli::Cli;
 use clap::Parser;
 
 /* command to implement:
@@ -13,6 +11,7 @@ use clap::Parser;
  * "var" creates symlink and opens it with neovim
  *
  * */
+
 fn main() {
     env_logger::init();
 
