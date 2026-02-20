@@ -1,11 +1,7 @@
 # little project to make todo management easier
 tool to look into a project tree and divide task by variable name AKA workload
 
-## things it does
-- [x] finds every todo and seperates them by var name,
-- [x] opens file concerned in editor (tested very briefly in nvim)
-
-## things that are going to be worked on atm
+## things that im working on atm
 - [ ] adding configuration file (toml) for customizing parser
 - [ ] documentation
 
