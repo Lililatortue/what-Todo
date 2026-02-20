@@ -1,16 +1,11 @@
 mod cli;
+mod parser;
+
 //mod navigation;
-//mod parser;
 //mod pod;
 
 use crate::cli::Cli;
 use clap::Parser;
-
-/* command to implement:
- * ls { -p(to seperate by path), -v(to seperate by var) }
- * "var" creates symlink and opens it with neovim
- *
- * */
 
 fn main() {
     env_logger::init();
