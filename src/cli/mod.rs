@@ -30,7 +30,6 @@ pub fn run(cli: Cli)->Result<(),&'static str> {
         Command::List(cmd) => todo!(),//ls::list(cmd.build()),
         Command::Open(cmd) => todo!(),//open::open(cmd.build()),
     };
-    Ok(())
 }
 
 
