@@ -1,5 +1,4 @@
-# little project to make todo management easier
-tool to look into a project tree and divide task by variable name AKA workload
+# little project to make todo searching easier 
 
 ## things that im working on atm
 - [ ] adding configuration file (toml) for customizing parser
