@@ -6,7 +6,6 @@ pub struct TodoParser<'a> {
     comment_dfa: LazyDfa<'a>,   
     todo_dfa:    LazyDfa<'a>,
     todo_str: Option<String>,
-
 }
 
 impl<'a> TodoParser<'a> {
@@ -66,7 +65,8 @@ mod test {
     use super::*;
 
     
-    const TEXT_LINE: &str = "// todo    (value)  {desc} todo(value){desc}";
+    const TEXT_LINE: &str = "// todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}";
+    const TEXT_MULTILINE: &str = "/* todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}*/todo(value){desc}";
     
     fn find_todo(parser:&mut TodoParser, iter: &mut Chars)->Option<String> {
         while let Some(c) = iter.next() { 
@@ -77,7 +77,7 @@ mod test {
     }
 
     #[test]
-    pub fn parsing_linecomment() {
+    pub fn parsing_line_comment() {
         let comment_nfa = make_nfa!(r"(// .* \n) | (/\* .* \*/ )");
         let todo_nfa    = make_nfa!(r"todo \s* \( .* \) \s* \{ .* \}");
 
@@ -89,6 +89,32 @@ mod test {
         
         todo = find_todo(&mut parser, &mut iter);
         assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
+
+        todo = find_todo(&mut parser, &mut iter);
+        assert_eq!(None,todo.as_ref().map(|t| t.as_str()));
+
+    }
+
+    #[test]
+    pub fn parsing_multiline_comment() {
+        let comment_nfa = make_nfa!(r"(// .* \n) | (/\* .* \*/ )");
+        let todo_nfa    = make_nfa!(r"todo \s* \( .* \) \s* \{ .* \}");
+
+        let mut parser = TodoParser::new(&comment_nfa, &todo_nfa);
+        let mut iter = TEXT_MULTILINE.chars();
+
+        let mut todo = find_todo(&mut parser, &mut iter);
+        assert_eq!(Some("todo    (value)  {desc}"),todo.as_ref().map(|t| t.as_str()));
+        
+        todo = find_todo(&mut parser, &mut iter);
+        assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
+ 
+        todo = find_todo(&mut parser, &mut iter);
+        assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
+
+        todo = find_todo(&mut parser, &mut iter);
+        assert_eq!(None,todo.as_ref().map(|t| t.as_str()));
+
     }
 
 }
