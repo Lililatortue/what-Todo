@@ -2,8 +2,8 @@ use clap::{Args};
 use std::{path::PathBuf};
 use super::*;
 
-///syntaxe todo list (value)* (-s)* (-p "path")*
-///list all todos in text, 
+///syntaxe: todo list (value)* (-s)* (-p "path")*
+///description: list all todos in text, 
 ///args:
 ///     if no value is provided then it returns all todos by default
 ///flag
@@ -32,7 +32,7 @@ impl Into<Config> for ListCommand {
 }
 
 ///syntaxe: todo open (value)* (-p "path")*
-///open all todos in files, 
+///description: open all todos in files, 
 ///args:
 ///     if no value is provided then it returns opens all file containing todos
 ///flag
