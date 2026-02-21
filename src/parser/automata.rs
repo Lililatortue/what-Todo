@@ -9,7 +9,8 @@ pub struct TodoParser<'a> {
 }
 
 impl<'a> TodoParser<'a> {
-    pub fn new(comment_nfa: &'a Nfa, todo_nfa: &'a Nfa)-> Self {
+    pub fn new(comment_nfa: &'a Nfa, todo_nfa: &'a Nfa)-> Self 
+    {
         TodoParser 
         {
             comment_dfa: comment_nfa.lazy(),
@@ -18,7 +19,8 @@ impl<'a> TodoParser<'a> {
         }
     }
 
-    pub fn next(&mut self,c: &char)-> Option<String> {
+    pub fn next(&mut self,c: &char)-> Option<String> 
+    {
         let result1 = self.comment_dfa.next(*c);   
         let result2 = self.todo_dfa.next(*c);
         //LazyDfa can return 3 results Invalid, Valid, Match
@@ -68,8 +70,10 @@ mod test {
     const TEXT_LINE: &str = "// todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}";
     const TEXT_MULTILINE: &str = "/* todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}*/todo(value){desc}";
     
-    fn find_todo(parser:&mut TodoParser, iter: &mut Chars)->Option<String> {
-        while let Some(c) = iter.next() { 
+    fn find_todo(parser:&mut TodoParser, iter: &mut Chars)->Option<String> 
+    {
+        while let Some(c) = iter.next() 
+        { 
            let Some(str) = parser.next(&c) else { continue };
             return Some(str);
         }
@@ -77,7 +81,8 @@ mod test {
     }
 
     #[test]
-    pub fn parsing_line_comment() {
+    pub fn parsing_line_comment() 
+    {
         let comment_nfa = make_nfa!(r"(// .* \n) | (/\* .* \*/ )");
         let todo_nfa    = make_nfa!(r"todo \s* \( .* \) \s* \{ .* \}");
 

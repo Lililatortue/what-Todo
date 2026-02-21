@@ -1,20 +1,17 @@
 mod cli;
 mod parser;
 mod configuration;
-//mod navigation;
-//mod pod;
 
-use crate::cli::Cli;
+use cli::Cli;
 use clap::Parser;
 
-fn main() {
+fn main()->Result<(),&'static str> {
 
-/*
-    match cli::run(Cli::parse()) {
-        Ok(ok)=> ok,
-        Err(e)=>  eprintln!("{}",e),
-    }
-*/
+    let workspace = configuration::check_workspace()
+        .map_err(|err| err.to_string());
+        
+    cli::run(Cli::parse())?;
+    Ok(())
 }
 
 
