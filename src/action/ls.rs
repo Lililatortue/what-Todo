@@ -1,5 +1,6 @@
 use crate::{cli::config::Config, navigation};
 use crate::pod::FileTodo;
+
 pub fn list_todo(config:Config)->Result<(),Box<(dyn std::error::Error+ 'static)>> {
     let files = navigation::travel_filesystem(path);
     let all_todo = navigation::parallele_file_processing(files);
