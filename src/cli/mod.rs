@@ -2,12 +2,13 @@ pub(crate) mod command;
 use clap::{Parser, Subcommand};
 use std::{path::PathBuf};
 
+use crate::{Config, action::{ls::list_todo, open::open}, cli::command::OutputType};
 
-
-pub(crate)struct Config {
+pub(crate)struct Cmd {
     pub silent: bool,
     pub value : Option<String>,
     pub path: PathBuf,
+    pub output: OutputType
 }
 
 
@@ -25,11 +26,16 @@ pub enum Command {
 }
 
 
-pub fn run(cli: Cli)->Result<(),&'static str> { 
-    let _ = match  cli.command {
-        Command::List(cmd) => todo!(),//ls::list(cmd.build()),
-        Command::Open(cmd) => todo!(),//open::open(cmd.build()),
+pub fn run(
+    config: Config,
+    cli: Cli
+)->Result<(),&'static str> 
+{ 
+    match  cli.command {
+        Command::List(cmd) => list_todo(cmd.into(),config),
+        Command::Open(cmd) => {let _ = open(cmd.into(),config);},
     };
+    Ok(())
 }
 
 

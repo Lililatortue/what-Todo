@@ -1,4 +1,4 @@
-use clap::{Args};
+use clap::{Args, ValueEnum};
 use std::{path::PathBuf};
 use super::*;
 
@@ -13,20 +13,29 @@ use super::*;
 pub struct ListCommand {     
     value: Option<String>,
         
-    #[arg(short, default_value = "false")]
+    #[arg(short, default_value_t = false)]
     silent: bool,
 
     #[arg(short,default_value = ".")]
     path: PathBuf,
 
+    #[arg(long, value_enum, default_value_t =OutputType::Visual)]
+    output: OutputType,
+}
+#[derive(ValueEnum, Clone, Debug, PartialEq)]
+pub enum OutputType {
+    Visual,
+    Json,
+    None,
 }
 
-impl Into<Config> for ListCommand {
-    fn into(self) -> Config {
-        Config {
+impl Into<Cmd> for ListCommand {
+    fn into(self) -> Cmd {
+        Cmd {
             silent: self.silent,
             value : self.value,
             path  : self.path,
+            output: self.output
         }
     }
 }
@@ -46,12 +55,13 @@ pub struct OpenCommand {
     path: PathBuf, 
 }
 
-impl Into<Config> for OpenCommand {
-    fn into(self) -> Config {
-         Config {
+impl Into<Cmd> for OpenCommand {
+    fn into(self) -> Cmd {
+         Cmd {
             silent: false,
             value : self.value,
             path  : self.path,
+            output: OutputType::None,
         }
     }
 }

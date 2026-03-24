@@ -1,7 +1,14 @@
 use regex_automata::{dfa::regex::Regex, nfa::thompson::pikevm::PikeVM};
 
+use crate::navigation::TodoEntry;
 
-pub fn comments(content:& str, regex: Regex)->Vec<& str> {
+
+//Regex takes three rules
+//first rule is line_comments
+//second rule is multiline comments
+//third is String
+//the Order must be respected
+pub fn find_comments<'a,'b>(content:&'a str, regex: &'b Regex)->Vec<&'a str> {
     let mut comments = vec![];
 
     for m in regex.find_iter(content.as_bytes()) {
@@ -9,14 +16,15 @@ pub fn comments(content:& str, regex: Regex)->Vec<& str> {
 
         match pattern_id {
             0 => comments.push(&content[m.range()]),
-            1 => {}, // String - ignore
+            1 => comments.push(&content[m.range()]),
             _ => (),
         }
     }
     comments 
 }
 
-pub fn find_todo(comments: Vec<&str>,vm:PikeVM) {
+pub fn find_todo(comments: Vec<&str>,vm: &PikeVM)-> Vec<TodoEntry> {
+    let mut todos = vec![];
     let mut cache = vm.create_cache();
     
     for comment in comments.iter() {
@@ -24,66 +32,44 @@ pub fn find_todo(comments: Vec<&str>,vm:PikeVM) {
 
         for caps in vm.captures_iter(&mut cache, bytes) {
             
-            let category = caps.get_group(1).map(|m| &comment[m.range()]);    
-            let task     = caps.get_match(2).map(|m| &comment[m.range()]);
+            let category    = caps.get_group_by_name("val").map(|m| &comment[m.range()]);    
+            let description = caps.get_group_by_name("desc").map(|m| &comment[m.range()]);
 
-            if let (Some(cat), Some(tsk)) = (category, task) {
-                println!("Found -> [Category: {}] [Task: {}]", cat, tsk);
+            if let (Some(cat), Some(desc)) = (category, description) {
+                todos.push(TodoEntry{tag:cat.to_string(),content:desc.to_string()})
             }
         }
-
-
     }
+    todos
 } 
 
 #[cfg(test)]
-mod test { 
+mod test {
+    use super::*; 
 
     
     const TEXT_LINE: &str = "// todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}";
-    const TEXT_MULTILINE: &str = "/* todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}*/todo(value){desc}";
+    const TEXT_MULTILINE: &str = r#"/* todo    (value)  {desc} todo(value){desc}
+todo(value){desc}*/"//todo(value){desc}""#;
     
- /*   fn find_todo(parser:&mut TodoParser, iter: &mut Chars)->Option<String> 
-    {
-        while let Some(c) = iter.next() 
-        { 
-           let Some(str) = parser.next(&c) else { continue };
-            return Some(str);
-        }
-        None
-    }
+    
     #[test]
-    pub fn parsing_line_comment() 
+    pub fn parsing_comment() 
     {
-        let mut parser = TodoParser::new(&comment_nfa, &todo_nfa);
-        let mut iter = TEXT_LINE.chars();
-
-        let mut todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(Some("todo    (value)  {desc}"),todo.as_ref().map(|t| t.as_str()));
+        let dfa = match Regex::new_many(&["//.*",r"(?s)/\*.*?\*/", r#"".*""#])
+        {
+            Ok(regex)=> regex,
+            Err(msg) => panic!("invalid regex: {}",msg)
+        };
         
-        todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
-
-        todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(None,todo.as_ref().map(|t| t.as_str()));
+        let results = find_comments(TEXT_MULTILINE,&dfa); 
+        assert_eq!(*results,["/* todo    (value)  {desc} todo(value){desc}\ntodo(value){desc}*/"]);
+        
+        let vm = PikeVM::new(r"(?i)todo\s*\((?P<val>.*?)\)\s*\{(?P<desc>.*?)\}")
+            .expect("bad regex err");
+        
+        let line = find_todo(results, &vm);
+        assert_eq!(line.len(),3);
     }
-
-    #[test]
-    pub fn parsing_multiline_comment() {
-        let mut parser = TodoParser::new(&comment_nfa, &todo_nfa);
-        let mut iter = TEXT_MULTILINE.chars();
-
-        let mut todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(Some("todo    (value)  {desc}"),todo.as_ref().map(|t| t.as_str()));
-        
-        todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
- 
-        todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(Some("todo(value){desc}"),todo.as_ref().map(|t| t.as_str()));
-
-        todo = find_todo(&mut parser, &mut iter);
-        assert_eq!(None,todo.as_ref().map(|t| t.as_str()));
-    }*/
-
+    
 }

@@ -1,2 +1,1 @@
-mod file_automata;
-mod todo_automata;
+pub mod file_automata;
