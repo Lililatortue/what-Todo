@@ -1,104 +1,79 @@
+use std::collections::BTreeMap;
 use std::{path::PathBuf};
-use ignore::WalkBuilder;
+use regex_automata::dfa::regex::Regex;
+use serde::Serialize;
 use walkdir::{WalkDir};
 use rayon::prelude::*;
-use crate::parser::create_list;
-use crate::pod::FileTodo;
+use crate::configuration::regex_config::RegexConfig;
+use crate::parser::file_automata::{find_comments,find_todo};
 
+type Result = ( PathBuf,Vec<(String,String)> );
+
+
+#[derive(Serialize)]
+pub struct Todos{
+    pub path: PathBuf,
+    pub entries: Vec<TodoEntry>
+}
+#[derive(Serialize)]
+pub struct TodoEntry {
+    pub tag : String,
+    pub content: String
+}
 /* 
  * searching all todos and listing them -> either by path or by var
  * 
  * opening all files concerned with todo
  *
  * */
+pub fn parallel_file_processing(
+    config: RegexConfig,
+    path  : &PathBuf
+)->Vec<Todos> {
+    let files = travel_filesystem(&config.supported_ext, &path);
+    
+    files
+        .par_iter()
+        .filter_map(|file| {
 
-fn is_binary_ext(path:& PathBuf)-> bool {
-    matches!(path.extension().and_then(|ext| ext.to_str()),
-              Some("exe" | "dll" | "so" | "bin" | "class" | "o" | "a"
-            | "jpg" | "jpeg" | "png" | "gif" | "pdf" | "zip" | "tar" | "gz")   
-            )
-}
+        let ext   = file.extension()?.to_str()?;
+        let rule  = config.supported_ext.get(ext)?;
 
-pub fn travel_filesystem(path: PathBuf)->Vec<PathBuf> {
-    let walk = WalkBuilder::new(path)
-        .hidden(true)       
-        .ignore(true)               
-        .git_ignore(true)           
-        .git_exclude(true)          
-        .git_global(true)           
-        .follow_links(false)
-        .build();
+        let content  = std::fs::read_to_string(file).ok()?;
+        let comments = find_comments(&content, &rule);
 
-        walk.filter_map(Result::ok)                                  
-        .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
-        .map(|e| e.into_path())
-        .filter(|p| !is_binary_ext(p))                          
-        .collect()
-}
-
-
-pub fn find_fs_location(path:PathBuf)->Result<PathBuf,&'static str>{
-    let root = std::fs::canonicalize(".").unwrap();
-    for directory in WalkDir::new(root)
-                    .into_iter()
-                    .filter_map(Result::ok)
-    {
-        if directory.file_name() == path {
-            return Ok(directory.into_path())
-        }
-    }
-    Err("Error: non-existant path {}")
-}
-
-
-pub fn parallele_file_processing(files: Vec<PathBuf>)->Vec<FileTodo> {
-    let parsed_files:Vec<FileTodo> = files.par_iter().filter_map(|file| {
-        let path = file.to_path_buf();
-        let todos = create_list(path.clone());
-        match todos {
-            Ok(todo) =>Some(todo),
-            Err(e)  =>{ 
-                log::warn!("{}",e);
-                None
-            },
-        }
-        
-    }).collect();
-
-    parsed_files 
-}
-
-
-
-
-#[cfg(test)]
-mod test {
-    use super::*; 
-    #[test]
-    pub fn test_navigation_current_path(){
-        let root = std::fs::canonicalize(".").unwrap();
-        let files = travel_filesystem(root);
-        assert_eq!(5,files.len());
-        //for debug purposes use -- --nocapture to look at what it prints
-        for file in files {
-            println!("{}",file.display());
-        }
-    }
-
-    #[test]
-    pub fn test_navigation_path(){
-        let directory = find_fs_location(PathBuf::from("project_navigator"));
-        let directory = match directory {
-            Ok(dir) => dir,
-            Err(e)      => {
-                eprintln!("{}",e);
-                std::process::exit(1)
-            },
+        let result = Todos {
+            path: file.clone(),
+            entries: find_todo(comments, &config.todo_nfa)
         };
-        let files = travel_filesystem(directory);
-        assert_eq!(5,files.len());
-    }
+        Some(result)
+    })
+    .collect::<Vec<Todos>>() 
 }
+
+fn travel_filesystem(
+    supported_ext: &BTreeMap<String,Regex>, 
+    path: &PathBuf
+)->Vec<PathBuf> {
+    WalkDir::new(path)
+        .into_iter()
+        .filter_map(|e| e.ok())                          // check if user can open it
+        .filter(|e| 
+            e.file_type().is_file() &&
+            e.path().extension()
+             .and_then(|ext| ext.to_str())
+             .map(|ext| supported_ext.contains_key(ext)) // check if regex is available
+             .unwrap_or(false)
+        )
+        .map(|e| e.path().to_path_buf())
+        .collect()   
+}
+
+
+
+
+
+
 
 
 
