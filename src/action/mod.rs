@@ -1,7 +1,7 @@
 use crate::{cli::Cmd, navigation::{Todos}};
 
 pub(crate) mod ls;
-pub(crate) mod open;
+//pub(crate) mod open;
 
 
 

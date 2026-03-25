@@ -11,7 +11,7 @@ use configuration::{
     workspace_config::WorkSpaceConfig,
     regex_config::RegexConfig
 };
-
+//TODO(REFACTOR_CONFIG) {Make COnfig more ergonomic}
 pub struct Config {
     workspace: Result<WorkSpaceConfig, &'static str>,
     regex    : RegexConfig,
@@ -19,7 +19,7 @@ pub struct Config {
 
 
 fn main()->Result<(),String> {
-    //todo(STATIC_VAR) { make config static for code clarity }
+    //todo(REFACTOR_CONFIG) { make config static for code clarity }
     //todo(INTEGRATION_TEST) {make integration test}
     let workspace = WorkSpaceConfig::new();
     let config    = workspace.as_ref()

@@ -1,3 +1,6 @@
+
+/*
+ * deprecated code 
 use crate::configuration::workspace_config::WorkSpaceConfig;
 use crate::navigation::{Todos};
 use crate::{Config, action::filter_todo, cli::Cmd, navigation::parallel_file_processing};
@@ -68,6 +71,4 @@ impl Drop for VirtualWorkSpace {
         }
     }
 }
-
-
-
+*/

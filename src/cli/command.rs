@@ -19,7 +19,7 @@ pub struct ListCommand {
     #[arg(short,default_value = ".")]
     path: PathBuf,
 
-    #[arg(long, value_enum, default_value_t =OutputType::Visual)]
+    #[arg(long, value_enum, default_value_t = OutputType::Visual)]
     output: OutputType,
 }
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
@@ -40,6 +40,10 @@ impl Into<Cmd> for ListCommand {
     }
 }
 
+
+
+/*
+ * deprecated
 ///syntaxe: todo open (value)* (-p "path")*
 ///description: open all todos in files, 
 ///args:
@@ -65,7 +69,7 @@ impl Into<Cmd> for OpenCommand {
         }
     }
 }
-
+*/
 
 
 #[cfg(test)]
@@ -74,7 +78,7 @@ pub mod test {
     #[test]
     pub fn listcmd_default() {
         let args = Cli::parse_from(["todo","list"]);
-        let Command::List(cmd) = args.command else { panic!("command should be list")};
+        let Command::List(cmd) = args.command; 
 
         assert_eq!(None,cmd.value);
         assert_eq!(false, cmd.silent);
@@ -84,13 +88,13 @@ pub mod test {
     #[test]
     pub fn listcmd_custom() {
         let args = Cli::parse_from(["todo","list", "test_value", "-sp","test_path"]);
-        let Command::List(cmd) = args.command else { panic!("command should be list")};
+        let Command::List(cmd) = args.command;
 
         assert_eq!(Some("test_value"),cmd.value.as_ref().map(|s|s.as_str()));
         assert_eq!(true, cmd.silent);
         assert_eq!(Some("test_path"), cmd.path.to_str());
     }
-
+/*
     #[test]
     pub fn opencmd_default(){
         let args = Cli::parse_from(["todo", "open"]);
@@ -108,4 +112,5 @@ pub mod test {
         assert_eq!(Some("test_value"),cmd.value.as_ref().map(|s|s.as_str()));
         assert_eq!(Some("test_path"), cmd.path.to_str());
     }
+*/
 }
